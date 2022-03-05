@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">charles_nfc</string>
+    <string name="default_scan_title">Nothing scanned.</string>
+</resources>
