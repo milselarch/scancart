@@ -12,5 +12,9 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+ext {
+    ndefToolsForAndroidVersion = '2.0.0'
+}
+
 rootProject.name = "charles_nfc"
 include ':app'
