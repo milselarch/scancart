@@ -20,26 +20,37 @@ import android.os.Bundle;
 import android.nfc.NfcAdapter;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View.OnClickListener;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private NfcAdapter mNfcAdapter;
     private PendingIntent mPendingIntent;
+    private Map<String, Object> itemDocument;
+    private final Integer userID = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +90,114 @@ public class MainActivity extends AppCompatActivity {
             ScanID.setText(R.string.nfc_enabled);
         }
 
-        // handleIntent(getIntent());
+        Button cartAddButton = findViewById(R.id.cart_add_button);
+        cartAddButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (itemDocument == null) {
+                    Toast.makeText(
+                        getApplicationContext(),
+                        "Nothing to add!",
+                        Toast.LENGTH_SHORT
+                    ).show();
+                } else {
+                    addItemToCart();
+                }
+            }
+        });
+    }
+
+    protected void addItemToCart() {
+        /*
+        cart item document will have 3 key-value pairs:
+        user_id: matches user_id in users collection
+        tag_id: matches NFC tag_id of items in inventory
+        quantity: how much of the item is in the cart
+        */
+        assert itemDocument != null;
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference cart = db.collection("shopping_cart");
+        String tagID = (String) itemDocument.get("tag_id");
+        Query query = cart
+            .whereEqualTo("user_id", userID)
+            .whereEqualTo("tag_id", tagID);
+
+        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Toast.makeText(
+                        getApplicationContext(),
+                        "Failed to read shopping cart",
+                        Toast.LENGTH_SHORT
+                    ).show();
+                }
+
+                boolean cart_has_items = false;
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    // we should only get a single document here
+                    assert !cart_has_items;
+                    String documentId = document.getId();
+                    Map<String, Object> documentData = document.getData();
+                    Log.i("DOC_CART_ID", documentId);
+                    Log.i("DOC_CART_DATA", documentData.toString());
+                    cart_has_items = true;
+
+                    // increment shopping cart item quantity by 1
+                    Long quantity = (Long) documentData.get("quantity");
+                    assert quantity != null;
+                    cart.document(documentId).update(
+                        "quantity", quantity+1
+                    );
+
+                    Toast.makeText(
+                        getApplicationContext(),
+                        "Added another item to cart",
+                        Toast.LENGTH_SHORT
+                    ).show();
+                }
+
+                if (!cart_has_items) {
+                    // cart for that item is empty, create new document
+                    Map<String, Object> cartItemData = new HashMap<>();
+                    cartItemData.put("user_id", userID);
+                    cartItemData.put("tag_id", tagID);
+                    cartItemData.put("quantity", 1);
+
+                    String documentName = "cart-" + userID.toString();
+                    cart.document(documentName)
+                        .set(cartItemData)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(
+                                    getApplicationContext(),
+                                    "Item added to cart",
+                                    Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w(TAG, "Error writing document", e);
+                                Toast.makeText(
+                                    getApplicationContext(),
+                                    "Error adding item to cart",
+                                    Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        });
+                }
+
+                Intent myIntent = new Intent(
+                    MainActivity.this, TestCart.class
+                );
+
+                myIntent.putExtra("last_item", tagID); //Optional parameters
+                MainActivity.this.startActivity(myIntent);
+            }
+        });
     }
 
     @Override
@@ -108,11 +226,11 @@ public class MainActivity extends AppCompatActivity {
         ScanID.setText(nfc_content);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference citiesRef = db.collection(
+        CollectionReference inventory = db.collection(
             "inventory"
         );
 
-        Query query = citiesRef.whereEqualTo("tag_id", nfc_content);
+        Query query = inventory.whereEqualTo("tag_id", nfc_content);
         query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -137,12 +255,14 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     protected void updateItem(String tagID, Map<String, Object> documentData) {
+        this.itemDocument = documentData;
         ImageView itemImageView = (ImageView) findViewById(R.id.item_image);
         TextView scanTitleView = (TextView) findViewById(R.id.scan_title);
         TextView caloriesTextInfo = (TextView) findViewById(R.id.item_calories);
         TextView carbsTextInfo = (TextView) findViewById(R.id.item_carbs);
         TextView proteinTextInfo = (TextView) findViewById(R.id.item_protein);
         TextView fatsTextInfo = (TextView) findViewById(R.id.item_fats);
+        TextView priceTextInfo = (TextView) findViewById(R.id.item_price);
         TextView tagIdView = (TextView) findViewById(R.id.scan_nfc_id);
 
         tagIdView.setText(tagID);
@@ -154,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
             carbsTextInfo.setText(R.string.na);
             proteinTextInfo.setText(R.string.na);
             fatsTextInfo.setText(R.string.na);
+            priceTextInfo.setText(R.string.na);
             return;
         }
 
@@ -161,6 +282,7 @@ public class MainActivity extends AppCompatActivity {
         Double carbs = parseDouble(documentData.get("carbs"));
         Double protein = parseDouble(documentData.get("protein"));
         Double fats = parseDouble(documentData.get("fats"));
+        Double price = parseDouble(documentData.get("price"));
         String displayName = (String) documentData.get("display_name");
         String imageUrl = (String) documentData.get("image_url");
 
@@ -168,12 +290,14 @@ public class MainActivity extends AppCompatActivity {
         assert carbs != null;
         assert protein != null;
         assert fats != null;
+        assert price != null;
 
         scanTitleView.setText(displayName);
         caloriesTextInfo.setText(calories.toString());
         carbsTextInfo.setText(carbs.toString() + "g");
         proteinTextInfo.setText(protein.toString() + "g");
         fatsTextInfo.setText(fats.toString() + "g");
+        priceTextInfo.setText("$" + price.toString());
 
         new DownloadImageTask(new DownloadImageTask.customListener() {
             @Override
