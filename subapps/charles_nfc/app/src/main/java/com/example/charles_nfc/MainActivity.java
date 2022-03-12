@@ -164,7 +164,11 @@ public class MainActivity extends AppCompatActivity {
                     cartItemData.put("tag_id", tagID);
                     cartItemData.put("quantity", 1);
 
-                    String documentName = "cart-" + userID.toString();
+                    assert tagID != null;
+                    String documentName = (
+                        "cart-" + userID.toString() + "-" +
+                        tagID.toString()
+                    );
                     cart.document(documentName)
                         .set(cartItemData)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
