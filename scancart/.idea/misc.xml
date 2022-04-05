@@ -4,6 +4,11 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.18229166666666666" />
+        <entry key="app/src/main/res/layout/check_available_timing.xml" value="0.21829710144927536" />
+        <entry key="app/src/main/res/layout/checkout.xml" value="0.21829710144927536" />
+        <entry key="app/src/main/res/layout/select_timing.xml" value="0.21829710144927536" />
+        <entry key="app/src/main/res/layout/shopping_cart_item.xml" value="0.21829710144927536" />
+        <entry key="app/src/main/res/layout/shopping_cart_main.xml" value="0.21829710144927536" />
         <entry key="app/src/main/res/layout/toolbar.xml" value="0.1490036231884058" />
       </map>
     </option>

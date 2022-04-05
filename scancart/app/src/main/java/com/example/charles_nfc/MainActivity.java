@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Intent myIntent = new Intent(
-                    MainActivity.this, TestCart.class
+                    MainActivity.this, ShoppingCartActivity.class
                 );
 
                 myIntent.putExtra("last_item", tagID); //Optional parameters
