@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    tools:context=".Checkout"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:layout_marginTop="20dp"
+    android:layout_marginBottom="25dp">
+
+    <Button
+        android:id="@+id/return_shopping_cart"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:textSize="20dp"
+        android:text="@string/return_shopping_cart"
+        android:layout_marginBottom="10dp"
+        />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_out_title"
+        android:textSize="35sp"
+        android:textStyle="bold"
+        android:textColor="#72CCBC"
+        android:gravity="center"
+        android:layout_marginBottom="10dp"
+        />
+
+    <TextView
+        android:id="@+id/address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="25dp"
+        />
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="25dp"
+        />
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="25dp"
+        />
+
+    <Button
+        android:id="@+id/editAddress"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:textSize="25dp"
+        android:background="@drawable/rounded_teal_button"
+        android:textColor="@color/white"
+        android:text="@string/address"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="20dp"
+        />
+
+    <Button
+        android:id="@+id/select_date_and_time"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:textSize="25dp"
+        android:background="@drawable/rounded_teal_button"
+        android:textColor="@color/white"
+        android:text="@string/select_date_and_time"
+        android:layout_gravity="center"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/place_order"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:textSize="25dp"
+        android:background="@drawable/rounded_teal_button"
+        android:textColor="@color/white"
+        android:layout_gravity="center"
+        android:text="@string/place_order"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="10dp"/>
+
+
+</LinearLayout>

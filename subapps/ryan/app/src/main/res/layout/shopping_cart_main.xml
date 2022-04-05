@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ShoppingCartActivity"
+    android:orientation="vertical"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:layout_marginTop="25dp"
+    android:layout_marginBottom="25dp"
+    >
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/shopping_cart"
+        android:textSize="35sp"
+        android:textStyle="bold"
+        android:textColor="#72CCBC"
+        android:gravity="center"
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/shopping_cart_items"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:scrollbars="vertical"
+        />
+
+    <TextView
+        android:id="@+id/cart_total"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/checkoutbtn"
+        android:text="@string/proceed_to_checkout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:textSize="25dp"
+        android:background="@drawable/rounded_teal_button"
+        android:textColor="@color/white" />
+
+</LinearLayout>

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "936218097780",
+    "project_id": "scancart-f5892",
+    "storage_bucket": "scancart-f5892.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:936218097780:android:903c6596e8d9b983f9b921",
+        "android_client_info": {
+          "package_name": "com.example.charles_nfc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "936218097780-oku54kom9oop4qtcmo1r4e5dg3plfbq4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "<YOUR_API_KEY>"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "936218097780-oku54kom9oop4qtcmo1r4e5dg3plfbq4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
