@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Login</string>
+    <string name="didn_t_get_otp_resend">Didn\'t Get OTP? <b>Resend</b></string>
+    <string-array name="health_conditions">
+        <item>Diabetes</item>
+        <item>High Blood Pressure</item>
+        <item>Heart Disease</item>
+        <item>High Cholesterol</item>
+        <item>Obesity</item>
+        <item>NIL</item>
+    </string-array>
+</resources>

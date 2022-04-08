@@ -3,7 +3,7 @@
     package="com.example.charles_nfc">
 
     <uses-permission android:name="android.permission.NFC" />
-
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.nfc" />
 
     <application
@@ -20,10 +20,19 @@
             android:label="@string/title_activity_test_shopping_cart"
             android:theme="@style/Theme.Charles_nfc.NoActionBar" />
 
+        <activity android:name=".ScanActivity"/>
         <activity android:name=".ShoppingCartActivity" android:exported="true"/>
         <activity android:name=".Checkout" android:parentActivityName=".ShoppingCartActivity" android:label="@string/checkout_label"> </activity>
         <activity android:name=".SelectTiming" android:parentActivityName=".Checkout" android:label="@string/select_timing_label"> </activity>
-
+        <activity
+            android:name=".EditProfile"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".register"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -31,7 +40,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.nfc.action.TAG_DISCOVERED" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

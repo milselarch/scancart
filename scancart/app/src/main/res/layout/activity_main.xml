@@ -1,172 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:background="#FFFFFF">
+    android:background="#f7f7f7"
+    android:orientation="vertical"
+    android:padding="10dp"
+    tools:context=".ScanActivity">
 
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/ic_baseline_shopping_cart_24" />
+
+    <!--For Phone Number -->
     <LinearLayout
+        android:id="@+id/phoneLl"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_gravity="center"
-        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="10dp"
-            android:layout_weight="0"
-            />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/item_image"
-            android:layout_width="wrap_content"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
-            android:layout_height="200dp"
-            android:layout_gravity="center"
+        <TextView
+            style="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:src="@drawable/shopping_cart"
-            android:contentDescription="@string/item_image_desc" />
+            android:text="Phone Number"
+            android:textAlignment="center"
+            android:textColor="#000" />
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/default_scan_title"
-            android:id="@+id/scan_title"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_gravity="center"
-            android:textSize="20sp"
-            />
+            android:text="Please Enter Your Phone Number to continue"
+            android:textAlignment="center"
+            android:textColor="#777777" />
 
-        <TableLayout
-            android:layout_width="200dp"
+        <EditText
+            android:id="@+id/phoneEt"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="20sp"
-            >
-            <TableRow
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:text="@string/calories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1" />
-                <TextView
-                    android:id="@+id/item_calories"
-                    android:text="@string/na"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_column="2"
-                    android:gravity="end"/>
-            </TableRow>
-            <TableRow
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:text="@string/carbs"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1" />
-                <TextView
-                    android:id="@+id/item_carbs"
-                    android:text="@string/na"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_column="2"
-                    android:gravity="end"/>
-            </TableRow>
-            <TableRow
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:text="@string/protein"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1" />
-                <TextView
-                    android:id="@+id/item_protein"
-                    android:text="@string/na"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_column="2"
-                    android:gravity="end"/>
-            </TableRow>
-            <TableRow
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:text="@string/fat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1" />
-                <TextView
-                    android:id="@+id/item_fats"
-                    android:text="@string/na"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_column="2"
-                    android:gravity="end"/>
-            </TableRow>
-
-            <TableRow
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:text="@string/price"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1" />
-                <TextView
-                    android:id="@+id/item_price"
-                    android:text="@string/na"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_column="2"
-                    android:gravity="end"/>
-            </TableRow>
-        </TableLayout>
+            android:layout_marginTop="10dp"
+            android:background="#fff"
+            android:hint="+65 XXXX XXXX"
+            android:inputType="phone"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textColorHint="#c5c5c5" />
 
         <Button
-            android:id="@+id/cart_add_button"
+            android:id="@+id/phoneContinueButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="30sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="Continue"
 
-            android:textSize="15sp"
-            android:textColor="@color/white"
-            android:visibility="visible"
-            android:clickable="true"
-            android:text="@string/add_to_cart"
-            android:focusable="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:textSize="20sp"
-            android:layout_marginTop="10sp"
-            android:text="@string/item_id"
-            android:fontFamily="@font/ubuntu_mono"
-            android:id="@+id/scan_nfc_id"
-            />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="0px"
-            android:layout_weight="1"
             />
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!--For OTP -->
+    <LinearLayout
+        android:id="@+id/codeLl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="vertical" >
+
+        <TextView
+            style="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Phone Number"
+            android:textAlignment="center"
+            android:textColor="#000" />
+
+        <TextView
+
+            android:id="@+id/codeSentDescription"
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Please Enter Verification Code sent\nto +65 XXXXXXXX"
+            android:textAlignment="center"
+            android:textColor="#777777" />
+
+        <EditText
+            android:id="@+id/codeEt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#fff"
+            android:hint="Please input OTP"
+            android:inputType="phone"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textColorHint="#c5c5c5" />
+
+        <TextView
+            android:id="@+id/resendCodeTv"
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="@string/didn_t_get_otp_resend"
+            android:textAlignment="center"
+            android:textColor="#777777" />
+
+        <Button
+            android:id="@+id/codeSubmitButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="Continue"
+            />
+    </LinearLayout>
+
+
+
+</LinearLayout>

@@ -1,408 +1,219 @@
 package com.example.charles_nfc;
 
-import static android.content.ContentValues.TAG;
-import static android.os.Build.VERSION.SDK_INT;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 
-import android.annotation.SuppressLint;
-import android.app.PendingIntent;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-import android.nfc.Tag;
-import android.os.Build;
-import android.os.Bundle;
-import android.nfc.NfcAdapter;
-import android.os.Parcelable;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.view.View.OnClickListener;
-
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.example.charles_nfc.databinding.ActivityMainBinding;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.PhoneAuthCredential;
+import com.google.firebase.auth.PhoneAuthOptions;
+import com.google.firebase.auth.PhoneAuthProvider;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+//TODO: Find a way to input user data into Firestore
+//TODO: Maybe find a way to authenticate the number first before OTP (Check firestore query first?)
 public class MainActivity extends AppCompatActivity {
-    private NfcAdapter mNfcAdapter;
-    private PendingIntent mPendingIntent;
-    private Map<String, Object> itemDocument;
-    private final Integer userID = 1;
+    private ActivityMainBinding binding;
 
+    //if code send failed, will be used to resend code OTP
+    private PhoneAuthProvider.ForceResendingToken forceResendingToken;
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks Callbacks;
+    private String verificationID;
+    private static final String TAG= "MAIN_TAG";
+    private FirebaseAuth firebaseAuth;
+
+    //progress dialog
+    private ProgressDialog pd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        setContentView(R.layout.activity_main);
 
-        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        if (mNfcAdapter == null) {
-            // Stop here, we definitely need NFC
-            Toast.makeText(
-                this, "This device doesn't support NFC.",
-                Toast.LENGTH_LONG
-            ).show();
-            finish();
-            return;
-        } else {
-            Intent targetIntent = new Intent(this, getClass());
-            int intentFlag = PendingIntent.FLAG_UPDATE_CURRENT;
-            if (SDK_INT >= Build.VERSION_CODES.S) {
-                intentFlag = PendingIntent.FLAG_MUTABLE;
+
+
+        super.onCreate(savedInstanceState);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        binding.phoneLl.setVisibility(View.VISIBLE); //show phone layout
+        binding.codeLl.setVisibility(View.GONE); //hide code layout, when OTP sent then hide phone, show code
+
+
+        firebaseAuth = FirebaseHandler.getInstanceAuth();
+
+
+        pd = new ProgressDialog(this);
+        pd.setTitle("Please wait...");
+        pd.setCanceledOnTouchOutside(false);
+        Callbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            @Override
+            public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
+                //Invoked on two situations:
+                //1- Instant Verification without needing to send OTP Code
+                //2= Auto Retrieval = performs verfication without user action
+                signInWithPhoneAuthCredential(phoneAuthCredential);
             }
 
-            mPendingIntent = PendingIntent.getActivity(
-                this, 0,
-                targetIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                intentFlag
-            );
-        }
+            @Override
+            public void onVerificationFailed(@NonNull FirebaseException e) {
+                //invalid request for verification e.g. invalid phone format
+                pd.dismiss();
+                Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
 
-        TextView ScanTitle = (TextView) findViewById(R.id.scan_title);
-        TextView ScanID = (TextView) findViewById(R.id.scan_nfc_id);
+            }
 
-        if (!mNfcAdapter.isEnabled()) {
-            ScanID.setText(R.string.nfc_disabled);
-        } else {
-            ScanID.setText(R.string.nfc_enabled);
-        }
+            @Override
+            public void onCodeSent(@NonNull String ID, @NonNull PhoneAuthProvider.ForceResendingToken token){
+                super.onCodeSent(ID, forceResendingToken);
+                //SMS Code sent to phone number
+                //ask user to enter code -> construct credential by combining code with verification ID
+                Log.d(TAG, "onCodeSent: " +ID);
 
-        Button cartAddButton = findViewById(R.id.cart_add_button);
-        cartAddButton.setOnClickListener(new OnClickListener() {
+                verificationID = ID;
+                forceResendingToken = token;
+                pd.dismiss();
+                //hide phone layout, show code layout
+                binding.phoneLl.setVisibility(View.GONE);
+                binding.codeLl.setVisibility(View.VISIBLE);
+                Toast.makeText(MainActivity.this, "Verification code sent", Toast.LENGTH_SHORT).show();
+                binding.codeSentDescription.setText("Please type the verification code we sent \nto " + binding.phoneEt.getText().toString().trim());
+            }
+        };
+
+        binding.phoneContinueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (itemDocument == null) {
-                    Toast.makeText(
-                        getApplicationContext(),
-                        "Nothing to add!",
-                        Toast.LENGTH_SHORT
-                    ).show();
-                } else {
-                    addItemToCart();
+                String phone = binding.phoneEt.getText().toString().trim();
+                if(TextUtils.isEmpty(phone)){
+                    Toast.makeText(MainActivity.this, "Please enter phone number", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    startPhoneNumberVerification(phone);
                 }
             }
         });
-    }
 
-    protected void addItemToCart() {
-        /*
-        cart item document will have 3 key-value pairs:
-        user_id: matches user_id in users collection
-        tag_id: matches NFC tag_id of items in inventory
-        quantity: how much of the item is in the cart
-        */
-        assert itemDocument != null;
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference cart = db.collection("shopping_cart");
-        String tagID = (String) itemDocument.get("tag_id");
-        Query query = cart
-            .whereEqualTo("user_id", userID)
-            .whereEqualTo("tag_id", tagID);
-
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        binding.resendCodeTv.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (!task.isSuccessful()) {
-                    Toast.makeText(
-                        getApplicationContext(),
-                        "Failed to read shopping cart",
-                        Toast.LENGTH_SHORT
-                    ).show();
+            public void onClick(View view) {
+                String phone = binding.phoneEt.getText().toString().trim();
+                if(TextUtils.isEmpty(phone)){
+                    Toast.makeText(MainActivity.this, "Please enter phone number", Toast.LENGTH_SHORT).show();
                 }
-
-                boolean cart_has_items = false;
-                for (QueryDocumentSnapshot document : task.getResult()) {
-                    // we should only get a single document here
-                    assert !cart_has_items;
-                    String documentId = document.getId();
-                    Map<String, Object> documentData = document.getData();
-                    Log.i("DOC_CART_ID", documentId);
-                    Log.i("DOC_CART_DATA", documentData.toString());
-                    cart_has_items = true;
-
-                    // increment shopping cart item quantity by 1
-                    Long quantity = (Long) documentData.get("quantity");
-                    assert quantity != null;
-                    cart.document(documentId).update(
-                        "quantity", quantity+1
-                    );
-
-                    Toast.makeText(
-                        getApplicationContext(),
-                        "Added another item to cart",
-                        Toast.LENGTH_SHORT
-                    ).show();
+                else{
+                    resendVerification(phone, forceResendingToken);
                 }
-
-                if (!cart_has_items) {
-                    // cart for that item is empty, create new document
-                    Map<String, Object> cartItemData = new HashMap<>();
-                    cartItemData.put("user_id", userID);
-                    cartItemData.put("tag_id", tagID);
-                    cartItemData.put("quantity", 1);
-
-                    assert tagID != null;
-                    String documentName = (
-                        "cart-" + userID.toString() + "-" +
-                        tagID.toString()
-                    );
-                    cart.document(documentName)
-                        .set(cartItemData)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                Toast.makeText(
-                                    getApplicationContext(),
-                                    "Item added to cart",
-                                    Toast.LENGTH_SHORT
-                                ).show();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w(TAG, "Error writing document", e);
-                                Toast.makeText(
-                                    getApplicationContext(),
-                                    "Error adding item to cart",
-                                    Toast.LENGTH_SHORT
-                                ).show();
-                            }
-                        });
-                }
-
-                Intent myIntent = new Intent(
-                    MainActivity.this, ShoppingCartActivity.class
-                );
-
-                myIntent.putExtra("last_item", tagID); //Optional parameters
-                MainActivity.this.startActivity(myIntent);
             }
         });
+
+        binding.codeSubmitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String code = binding.codeEt.getText().toString().trim();
+                if(TextUtils.isEmpty(code)){
+                    Toast.makeText(MainActivity.this, "Please enter Verification code", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    System.out.println(verificationID);
+                    //prevents loss of MMR
+                    verifyPhoneAndCode(verificationID, code, savedInstanceState);
+                }
+            }
+        });
+
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mNfcAdapter.enableForegroundDispatch(
-            this, mPendingIntent, null, null
-        );
+    private void startPhoneNumberVerification(String phone){
+        pd.setMessage("Verifying Phone Number");
+        pd.show();
+
+        PhoneAuthOptions options =
+                PhoneAuthOptions.newBuilder(firebaseAuth)
+                .setPhoneNumber(phone)
+                .setTimeout(60L, TimeUnit.SECONDS)
+                .setActivity(this)
+                .setCallbacks(Callbacks)
+                .build();
+
+        PhoneAuthProvider.verifyPhoneNumber(options);
+
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mNfcAdapter != null) {
-            mNfcAdapter.disableForegroundDispatch(this);
+    private void resendVerification(String phone, PhoneAuthProvider.ForceResendingToken token){
+        pd.setMessage("Resending Code");
+        pd.show();
+
+        PhoneAuthOptions options=
+                PhoneAuthOptions.newBuilder(firebaseAuth)
+                .setPhoneNumber(phone)
+                .setTimeout(60L, TimeUnit.SECONDS)
+                .setActivity(this)
+                .setCallbacks(Callbacks)
+                .setForceResendingToken(token)
+                .build();
+        PhoneAuthProvider.verifyPhoneNumber(options);
+
+    }
+
+    private void verifyPhoneAndCode(String verificationID, String code, @NonNull Bundle savedInstanceState){
+        PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationID, code);
+        if (verificationID == null && savedInstanceState != null){
+            onRestoreInstanceState(savedInstanceState);
         }
+        signInWithPhoneAuthCredential(credential);
+        pd.setTitle("Verifying Code");
+        pd.show();
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        final String nfc_content = getTagInfo(intent);
-        if (nfc_content == null) { return; }
+    protected void onSaveInstanceState(@NonNull Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putString("KEY_ID", verificationID);
+    }
 
-        TextView ScanID = (TextView) findViewById(R.id.scan_nfc_id);
-        ScanID.setText(nfc_content);
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState){
+        super.onRestoreInstanceState(savedInstanceState);
+        verificationID = savedInstanceState.getString("KEY_ID");
+    }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference inventory = db.collection(
-            "inventory"
-        );
-
-        Query query = inventory.whereEqualTo("tag_id", nfc_content);
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                Log.println(Log.INFO, "FIRE_STATUS", task.toString());
-
-                if (task.isSuccessful()) {
-                    Log.println(Log.INFO, "FIRE_STATUS", "TRUE");
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        String documentId = document.getId();
-                        Map<String, Object> documentData = document.getData();
-                        updateItem(nfc_content, documentData);
-                        return;
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential){
+        pd.setMessage("Logging in");
+        firebaseAuth.signInWithCredential(credential)
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>(){
+                    @Override
+                    public void onSuccess(AuthResult authResult){
+                        //Successful sign in
+                        pd.dismiss();
+                        String phone = firebaseAuth.getCurrentUser().getPhoneNumber();
+                        Toast.makeText(MainActivity.this, "Logged In as" + phone, Toast.LENGTH_SHORT).show();
+                        Intent profile = new Intent(MainActivity.this, ProfileActivity.class);
+                        startActivity(profile);
                     }
-                    // no matching items found in firebase
-                    updateItem(nfc_content, null);
-                } else {
-                    Log.d(TAG, "Error getting documents: ", task.getException());
-                }
-            }
-        });
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //failed Signin in
+                        pd.dismiss();
+                        Toast.makeText(MainActivity.this, "" +e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+
     }
 
-    @SuppressLint("SetTextI18n")
-    protected void updateItem(String tagID, Map<String, Object> documentData) {
-        this.itemDocument = documentData;
-        ImageView itemImageView = (ImageView) findViewById(R.id.item_image);
-        TextView scanTitleView = (TextView) findViewById(R.id.scan_title);
-        TextView caloriesTextInfo = (TextView) findViewById(R.id.item_calories);
-        TextView carbsTextInfo = (TextView) findViewById(R.id.item_carbs);
-        TextView proteinTextInfo = (TextView) findViewById(R.id.item_protein);
-        TextView fatsTextInfo = (TextView) findViewById(R.id.item_fats);
-        TextView priceTextInfo = (TextView) findViewById(R.id.item_price);
-        TextView tagIdView = (TextView) findViewById(R.id.scan_nfc_id);
 
-        tagIdView.setText(tagID);
-
-        if (documentData == null) {
-            scanTitleView.setText(R.string.unknown_item);
-            caloriesTextInfo.setText(R.string.na);
-            itemImageView.setImageResource(R.drawable.shopping_cart);
-            carbsTextInfo.setText(R.string.na);
-            proteinTextInfo.setText(R.string.na);
-            fatsTextInfo.setText(R.string.na);
-            priceTextInfo.setText(R.string.na);
-            return;
-        }
-
-        Long calories = (Long) documentData.get("calories");
-        Double carbs = parseDouble(documentData.get("carbs"));
-        Double protein = parseDouble(documentData.get("protein"));
-        Double fats = parseDouble(documentData.get("fats"));
-        Double price = parseDouble(documentData.get("price"));
-        String displayName = (String) documentData.get("display_name");
-        String imageUrl = (String) documentData.get("image_url");
-
-        assert calories != null;
-        assert carbs != null;
-        assert protein != null;
-        assert fats != null;
-        assert price != null;
-
-        scanTitleView.setText(displayName);
-        caloriesTextInfo.setText(calories.toString());
-        carbsTextInfo.setText(carbs.toString() + "g");
-        proteinTextInfo.setText(protein.toString() + "g");
-        fatsTextInfo.setText(fats.toString() + "g");
-        priceTextInfo.setText("$" + price.toString());
-
-        new DownloadImageTask(new DownloadImageTask.customListener() {
-            @Override
-            public void postExecute(Bitmap result) {
-                itemImageView.setImageBitmap(result);
-            }
-        }).execute(imageUrl);
-    }
-
-    public static Double parseDouble(Object number) {
-        try {
-            return (Double) number;
-        } catch (ClassCastException e) {
-            Long longNumber = (Long) number;
-            return (double) longNumber;
-        }
-    }
-
-    public static String bundleToString(Bundle bundle) {
-        // https://stackoverflow.com/questions/6474734/how-do-i-know-what-data-is-given-in-a-bundle
-        if (bundle == null) {
-            return null;
-        }
-        StringBuilder stringBuilder = new StringBuilder("Bundle{");
-        for (String key : bundle.keySet()) {
-            stringBuilder.append(" ");
-            stringBuilder.append(key);
-            stringBuilder.append(" => ");
-            stringBuilder.append(bundle.get(key)).append(";");
-        }
-
-        String string = stringBuilder.toString();
-        string += " }Bundle";
-        return string;
-    }
-
-    public static NdefMessage[] extractNDEF(Intent intent) {
-        // https://developer.android.com/guide/topics/connectivity/nfc/nfc#obtain-info
-        String type = intent.getType();
-        String action = intent.getAction();
-        if (!NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
-            return null;
-        }
-
-        Parcelable[] parcs = intent.getParcelableArrayExtra(
-            NfcAdapter.EXTRA_NDEF_MESSAGES
-        );
-
-        if (parcs == null) { return null; }
-        NdefMessage[] messages = new NdefMessage[parcs.length];
-        for (int k = 0; k < messages.length; k++) {
-            messages[k] = (NdefMessage) parcs[k];
-        }
-
-        return messages;
-    }
-
-    private String getTagInfo(Intent intent) {
-        // https://stackoverflow.com/questions/12313596/how-to-read-nfc-tag/28565383#28565383
-        Bundle extras = getIntent().getExtras();
-        String str_bundle = bundleToString(extras);
-
-        if (str_bundle == null) {
-            Log.i("NFC_BUNDLE", "INTENT NULL");
-        } else {
-            Log.i("BUNDLE", str_bundle);
-            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            String[] techList = tag.getTechList();
-
-            for (String s : techList) {
-                Log.i("TAG_INFO", s);
-            }
-        }
-
-        NdefMessage[] nfc_messages = extractNDEF(intent);
-        if (nfc_messages == null) { return null; }
-        NdefMessage ndefMessage = nfc_messages[0];
-        NdefRecord firstRecord = ndefMessage.getRecords()[0];
-        Log.println(Log.INFO, "NFC_RECORD", firstRecord.toString());
-
-        // https://stackoverflow.com/questions/14607425/read-data-from-nfc-tag
-        byte[] payload = firstRecord.getPayload();
-        String textEncoding = ((payload[0] & 0200) == 0) ? "UTF-8" : "UTF-16";
-        int languageCodeLength = payload[0] & 0077;
-        String languageCode = new String(
-            payload, 1, languageCodeLength, StandardCharsets.US_ASCII
-        );
-
-        String nfc_text;
-        //Get the Text
-        try {
-            nfc_text = new String(
-                payload, languageCodeLength + 1,
-                payload.length - languageCodeLength - 1, textEncoding
-            );
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        Log.println(Log.INFO, "NFC_TEXT", nfc_text);
-        return nfc_text;
-    }
 }
