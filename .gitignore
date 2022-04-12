@@ -1,5 +1,6 @@
 **/google-services.json
 **/local.properties
 **/.idea
+.gradle
 .idea/
 .idea
