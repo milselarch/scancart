@@ -22,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class ProfileActivity extends AppCompatActivity {
     FirebaseAuth firebaseAuth;
     FirebaseFirestore fStore;
+    final UserAccount account = UserAccount.getAccount();
 
     private ActivityProfileactivityBinding binding;
     @Override
@@ -31,14 +32,21 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         firebaseAuth = FirebaseHandler.getInstanceAuth();
         fStore = FirebaseHandler.getInstanceDatabase();
-        checkUserStatus();
+        // checkUserStatus();
+
+        if (!account.isLoggedIn()) {
+            this.logout();
+            return;
+        }
 
         //Pressed logout button, logout user
         binding.logoutBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                account.logout(getApplicationContext());
                 firebaseAuth.signOut();
-                startActivity(new Intent(ProfileActivity.this, ScanActivity.class));
+
+                startActivity(new Intent(ProfileActivity.this, MainActivity.class));
                 checkUserStatus();
             }
         });
@@ -53,10 +61,24 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
+    private void logout() {
+        account.logout(getApplicationContext());
+        firebaseAuth.signOut();
+        startActivity(new Intent(
+            ProfileActivity.this, MainActivity.class
+        ));
+        finish();
+    }
+
     private void checkUserStatus(){
         //get current user
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
         String uID = firebaseAuth.getUid();
+        if (uID == null) {
+            this.logout();
+            return;
+        }
+
         DocumentReference docRef = fStore.collection("users").document(uID);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -65,31 +87,24 @@ public class ProfileActivity extends AppCompatActivity {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()){
                         Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                        Intent scanIntent = new Intent(
-                            ProfileActivity.this, com.example.charles_nfc.ScanActivity.class
-                        );
-                        startActivity(scanIntent);
-                    }
-                    else{
+                    } else {
                         Log.d(TAG, "No such document");
                         Intent register = new Intent(ProfileActivity.this, com.example.charles_nfc.register.class);
                         register.putExtra("UUID", uID);
                         startActivity(register);
                     }
-                }
-                else{
+                } else {
                     Log.d(TAG, "get failed with ", task.getException());
                 }
-
             }
         });
-        if(firebaseUser != null){
+
+        if (firebaseUser != null) {
             String phone = firebaseUser.getPhoneNumber();
             Log.d("PHIONE", phone);
             binding.phoneTv.setText(phone);
             //user is logged in
-        }
-        else{
+        } else {
             //user not logged in
             finish();
         }

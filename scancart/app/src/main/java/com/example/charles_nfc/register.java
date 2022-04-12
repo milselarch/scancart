@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,6 +26,8 @@ public class register extends AppCompatActivity {
     private EditText floorAndUnitField;
     private String spinnerChoice;
     private Spinner healthConditionsChoice;
+
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore fStore;
 
@@ -79,9 +82,9 @@ public class register extends AppCompatActivity {
 
         });
 
-//        HashMap<String, String> userDetails = new HashMap<>();
+        // HashMap<String, String> userDetails = new HashMap<>();
+        // Sign up button
 
-        //Sign up button
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -90,10 +93,34 @@ public class register extends AppCompatActivity {
                 String streetAddress = streetAddressField.getText().toString();
                 String postalCode = postalCodeField.getText().toString();
                 String floorAndUnit = floorAndUnitField.getText().toString();
-                FirebaseHandler.User user = new FirebaseHandler().new User(UID, Name, phoneNumber, streetAddress, postalCode, floorAndUnit, spinnerChoice);
-                FirebaseHandler.registerUser(user, fStore);
-                startActivity(new Intent(register.this, ProfileActivity.class));
 
+                firebaseManager.getMaxUserID(new FirebaseHandler.FireCallback() {
+                    @Override
+                    public void callback(Object result) {
+                        Long maxUserID = (Long) result;
+                        if ((maxUserID == null) || (maxUserID == -1)) {
+                            Log.d("FIRE_ERROR", "FAILED TO ACQUIRE USERID");
+                            Toast.makeText(
+                                register.this,
+                                "failed to acquire user id",
+                                Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
+
+                        assert maxUserID >= 0;
+                        Long newUserID = maxUserID + 1;
+                        FirebaseHandler.User user = new FirebaseHandler().new User(
+                            UID, Name, phoneNumber, streetAddress, postalCode,
+                            floorAndUnit, spinnerChoice, newUserID
+                        );
+
+                        FirebaseHandler.registerUser(user, fStore, (Object editResult) -> {
+                            boolean success = (Boolean) editResult;
+                            onRegisterComplete(success);
+                        });
+                    }
+                });
             }
         });
 
@@ -103,7 +130,24 @@ public class register extends AppCompatActivity {
                 startActivity(new Intent(register.this, ScanActivity.class));
             }
         });
+    }
 
+    void onRegisterComplete(boolean successful) {
+        Log.d("REGISTER_STATUS", String.valueOf(successful));
+        if (!successful) {
+            Toast.makeText(
+                this, "failed to register user",
+                Toast.LENGTH_SHORT
+            ).show();
+            return;
+        };
 
+        Toast.makeText(
+            this, "successfully registered user",
+            Toast.LENGTH_SHORT
+        ).show();
+        startActivity(new Intent(
+            register.this, ProfileActivity.class
+        ));
     }
 }

@@ -92,16 +92,19 @@ public class Checkout extends AppCompatActivity {
 
                 if (str_date == null && str_time == null) {
                     Toast.makeText(
-                            getApplicationContext(),
-                            "Date and Time not selected",
-                            Toast.LENGTH_SHORT
+                        getApplicationContext(),
+                        "Date and Time not selected",
+                        Toast.LENGTH_SHORT
                     ).show();
                 } else {
-                    orderID = String.valueOf(UUID.randomUUID().getLeastSignificantBits());
                     total_cost = calculate_total_cost(shopping_cart);
-                    FireCallback callback = new FireCallback() {
+                    orderID = String.valueOf(
+                        UUID.randomUUID().getLeastSignificantBits()
+                    );
+
+                    FirebaseHandler.FireCallback callback = new FirebaseHandler.FireCallback() {
                         @Override
-                        public void callback() {
+                        public void callback(Object result) {
                             //Todo Intent to delivery page?
                             Intent main_intent = new Intent(Checkout.this, ShoppingCartActivity.class);
                             startActivity(main_intent);
@@ -154,7 +157,9 @@ public class Checkout extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult ( int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult (
+        int requestCode, int resultCode, Intent data
+    ) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_DATETIME) {
             if (resultCode == Activity.RESULT_OK) {
@@ -166,10 +171,6 @@ public class Checkout extends AppCompatActivity {
         }
     }
 
-    interface FireCallback {
-        void callback();
-    }
-
     protected void FirebaseCheckOut(
             String str_date,
             String str_time,
@@ -177,7 +178,7 @@ public class Checkout extends AppCompatActivity {
             int userID,
             String orderID,
             double total_cost,
-            FireCallback callback
+            FirebaseHandler.FireCallback callback
     ) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference cart = db.collection("completed_orders");
@@ -192,43 +193,42 @@ public class Checkout extends AppCompatActivity {
         docData.put("total_cost", total_cost);
 
         cart.add(docData)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.e(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                @Override
+                public void onSuccess(DocumentReference documentReference) {
+                    Log.e(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e(TAG, "Error writing document", e);
+                }
+            });
+
+            Map<String,Object> checkOutList = new HashMap<>();
+
+            db.collection("shopping_cart")
+                .whereEqualTo("user_id", userID)
+                .get()
+                .addOnSuccessListener((querySnapshot) -> {
+                    WriteBatch batch = db.batch();
+                    for (DocumentSnapshot doc : querySnapshot) {
+                        batch.delete(doc.getReference());
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Error writing document", e);
-                    }
-                });
 
-                Map<String,Object> checkOutList = new HashMap<>();
-
-                db.collection("shopping_cart")
-                        .whereEqualTo("user_id", userID)
-                        .get()
-                        .addOnSuccessListener((querySnapshot) -> {
-                            WriteBatch batch = db.batch();
-                            for (DocumentSnapshot doc : querySnapshot) {
-                                batch.delete(doc.getReference());
-                            }
-
-                            batch.commit()
-                                .addOnSuccessListener((result) -> {
-                                    Log.i(TAG, "All items have been removed.");
-                                    callback.callback();
-                                })
-                                .addOnFailureListener((error) -> {
-                                    Log.e(TAG, "Failed to remove all items.", error);
-                                });
+                    batch.commit()
+                        .addOnSuccessListener((result) -> {
+                            Log.i(TAG, "All items have been removed.");
+                            callback.callback(null);
                         })
                         .addOnFailureListener((error) -> {
-                            Log.e(TAG, "Failed to get your cart items.", error);
+                            Log.e(TAG, "Failed to remove all items.", error);
                         });
+                })
+                .addOnFailureListener((error) -> {
+                    Log.e(TAG, "Failed to get your cart items.", error);
+                });
     }
-
 }
 

@@ -1,6 +1,7 @@
 package com.example.charles_nfc;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -27,35 +28,43 @@ import java.util.concurrent.TimeUnit;
 //TODO: Maybe find a way to authenticate the number first before OTP (Check firestore query first?)
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
+    UserAccount account;
 
     //if code send failed, will be used to resend code OTP
     private PhoneAuthProvider.ForceResendingToken forceResendingToken;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks Callbacks;
     private String verificationID;
     private static final String TAG= "MAIN_TAG";
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
     private FirebaseAuth firebaseAuth;
 
     //progress dialog
     private ProgressDialog pd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
-
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         binding.phoneLl.setVisibility(View.VISIBLE); //show phone layout
         binding.codeLl.setVisibility(View.GONE); //hide code layout, when OTP sent then hide phone, show code
-
-
         firebaseAuth = FirebaseHandler.getInstanceAuth();
-
 
         pd = new ProgressDialog(this);
         pd.setTitle("Please wait...");
         pd.setCanceledOnTouchOutside(false);
+
+        Context context = this.getApplicationContext();
+        account = UserAccount.getAccount();
+        account.loadFromContext(context);
+
+        if (account.isLoggedIn()) {
+            Toast.makeText(this, "logged in", Toast.LENGTH_SHORT).show();
+            startProfileActivity();
+        } else {
+            Toast.makeText(this, "not logged in", Toast.LENGTH_SHORT).show();
+        }
+
         Callbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override
             public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
@@ -70,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
                 //invalid request for verification e.g. invalid phone format
                 pd.dismiss();
                 Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
-
             }
 
             @Override
@@ -131,7 +139,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
 
+    void startProfileActivity() {
+        Intent profile = new Intent(
+            MainActivity.this, ProfileActivity.class
+        );
+        startActivity(profile);
     }
 
     private void startPhoneNumberVerification(String phone){
@@ -147,10 +161,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         PhoneAuthProvider.verifyPhoneNumber(options);
-
     }
 
-    private void resendVerification(String phone, PhoneAuthProvider.ForceResendingToken token){
+    private void resendVerification(
+        String phone, PhoneAuthProvider.ForceResendingToken token
+    ) {
         pd.setMessage("Resending Code");
         pd.show();
 
@@ -162,12 +177,16 @@ public class MainActivity extends AppCompatActivity {
                 .setCallbacks(Callbacks)
                 .setForceResendingToken(token)
                 .build();
-        PhoneAuthProvider.verifyPhoneNumber(options);
 
+        PhoneAuthProvider.verifyPhoneNumber(options);
     }
 
-    private void verifyPhoneAndCode(String verificationID, String code, @NonNull Bundle savedInstanceState){
-        PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationID, code);
+    private void verifyPhoneAndCode(
+        String verificationID, String code, @NonNull Bundle savedInstanceState
+    ) {
+        PhoneAuthCredential credential = PhoneAuthProvider.getCredential(
+            verificationID, code
+        );
         if (verificationID == null && savedInstanceState != null){
             onRestoreInstanceState(savedInstanceState);
         }
@@ -183,37 +202,80 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState){
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         verificationID = savedInstanceState.getString("KEY_ID");
     }
 
-    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential){
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         pd.setMessage("Logging in");
+        Context context = this.getApplicationContext();
+
         firebaseAuth.signInWithCredential(credential)
-                .addOnSuccessListener(new OnSuccessListener<AuthResult>(){
-                    @Override
-                    public void onSuccess(AuthResult authResult){
-                        //Successful sign in
-                        pd.dismiss();
-                        String phone = firebaseAuth.getCurrentUser().getPhoneNumber();
-                        Toast.makeText(MainActivity.this, "Logged in as" + phone, Toast.LENGTH_SHORT).show();
-                        Intent profile = new Intent(MainActivity.this, ProfileActivity.class);
-                        startActivity(profile);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        //failed Signin in
-                        pd.dismiss();
-                        Toast.makeText(MainActivity.this, "" +e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+            .addOnSuccessListener(new OnSuccessListener<AuthResult>(){
+                @Override
+                public void onSuccess(AuthResult authResult){
+                    //Successful sign in
+                    pd.dismiss();
+                    String phone = firebaseAuth.getCurrentUser().getPhoneNumber();
+                    Toast.makeText(
+                        MainActivity.this, "Logged in as" + phone,
+                        Toast.LENGTH_SHORT
+                    ).show();
 
+                    FirebaseHandler.FireCallback listener = new FirebaseHandler.FireCallback() {
+                        @Override
+                        public void callback(Object result) {
+                            assert result != null;
+                            if (result instanceof Exception) {
+                                callback((Exception) result);
+                                return;
+                            }
 
+                            int userID = (Integer) result;
+                            callback(userID);
+                        }
 
+                        public void callback(int userID) {
+                            if (userID == -1) {
+                                // user has no userID set
+                                Log.d("USER_ID", "No id set");
+                                startProfileActivity();
+                                return;
+                            }
+
+                            // save userID to sharedPreferences
+                            // and update account accordingly
+                            account.saveUserID(context, userID);
+                            assert account.isLoggedIn();
+
+                            // go to profile activity after logging in
+                            startProfileActivity();
+                        }
+
+                        public void callback(Exception result) {
+                            Log.e("FIRE_ERROR", result.toString());
+                            Toast.makeText(
+                                MainActivity.this,
+                                "Firebase error encountered",
+                                Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    };
+
+                    firebaseManager.loadUserID(listener);
+                }
+            })
+
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    //failed Signin in
+                    pd.dismiss();
+                    Toast.makeText(MainActivity.this, "" +e.getMessage(), Toast.LENGTH_SHORT).show();
+                    account.logout(context);
+                    assert !account.isLoggedIn();
+                }
+            });
     }
-
-
 }
