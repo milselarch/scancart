@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                         //Successful sign in
                         pd.dismiss();
                         String phone = firebaseAuth.getCurrentUser().getPhoneNumber();
-                        Toast.makeText(MainActivity.this, "Logged In as" + phone, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Logged in as" + phone, Toast.LENGTH_SHORT).show();
                         Intent profile = new Intent(MainActivity.this, ProfileActivity.class);
                         startActivity(profile);
                     }
