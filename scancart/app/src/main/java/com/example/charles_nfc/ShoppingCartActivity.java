@@ -26,7 +26,6 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 public class ShoppingCartActivity extends AppCompatActivity {
-
     ArrayList<ShoppingCartItemModel> shopping_cart = new ArrayList<>();
     RecyclerView mRecyclerView;
     Button checkoutButton;

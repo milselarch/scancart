@@ -76,6 +76,8 @@ public class Delivery extends Fragment {
             }
         });
 
-        return inflater.inflate(R.layout.fragment_delivery, container, false);
+        return inflater.inflate(
+            R.layout.fragment_delivery, container, false
+        );
     }
 }

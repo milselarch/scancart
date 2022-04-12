@@ -103,10 +103,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String phone = binding.phoneEt.getText().toString().trim();
-                if(TextUtils.isEmpty(phone)){
-                    Toast.makeText(MainActivity.this, "Please enter phone number", Toast.LENGTH_SHORT).show();
-                }
-                else{
+                if (TextUtils.isEmpty(phone)) {
+                    Toast.makeText(
+                        MainActivity.this,
+                        "Please enter phone number",
+                        Toast.LENGTH_SHORT
+                    ).show();
+                } else {
                     startPhoneNumberVerification(phone);
                 }
             }
