@@ -1,5 +1,6 @@
 package com.example.yourscancart;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -28,14 +29,15 @@ import java.util.Map;
 public class Delivery extends Fragment {
     FirebaseFirestore db;
     private final Integer userID = 1;
+    ArrayList<Order> orders = new ArrayList<>();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(
+        LayoutInflater inflater, ViewGroup container,
+        Bundle savedInstanceState
+    ) {
         super.onCreate(savedInstanceState);
         db = FirebaseFirestore.getInstance();
-
-        ArrayList<Order> orders = new ArrayList<>();
         CollectionReference orders_completed = db.collection("completed_orders");
         Query query = orders_completed.whereEqualTo("user_id", userID);
 
@@ -64,12 +66,16 @@ public class Delivery extends Fragment {
                 Collections.sort(orders);
                 Collections.reverse(orders);
                 ListView orderlist = container.findViewById(R.id.orderlist);
-                OrdersAdapter ordersAdapter = new OrdersAdapter(getContext(), orders);
+                assert orders != null;
+
+                Context context = getContext();
+                if (context == null) { return; }
+
+                OrdersAdapter ordersAdapter = new OrdersAdapter(context, orders);
                 orderlist.setAdapter(ordersAdapter);
                 orderlist.setClickable(true);
             }
         });
-
 
         return inflater.inflate(R.layout.fragment_delivery, container, false);
     }

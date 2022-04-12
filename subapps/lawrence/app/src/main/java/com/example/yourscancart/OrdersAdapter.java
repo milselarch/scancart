@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 public class OrdersAdapter extends ArrayAdapter<Order>{
     public OrdersAdapter(Context context, ArrayList<Order> orders){
-        super(context, R.layout.list_item,orders);
+        super(context, R.layout.list_item, orders);
     }
 
     @NonNull
