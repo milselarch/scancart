@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (account.isLoggedIn()) {
             Toast.makeText(this, "logged in", Toast.LENGTH_SHORT).show();
-            startProfileActivity();
+            startFragmentActivity();
         } else {
             Toast.makeText(this, "not logged in", Toast.LENGTH_SHORT).show();
         }
@@ -141,9 +141,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void startProfileActivity() {
+    void startFragmentActivity() {
         Intent profile = new Intent(
-            MainActivity.this, ProfileActivity.class
+            MainActivity.this, FragmentActivity.class
         );
         startActivity(profile);
     }
@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
                             if (userID == -1) {
                                 // user has no userID set
                                 Log.d("USER_ID", "No id set");
-                                startProfileActivity();
+                                startFragmentActivity();
                                 return;
                             }
 
@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                             assert account.isLoggedIn();
 
                             // go to profile activity after logging in
-                            startProfileActivity();
+                            startFragmentActivity();
                         }
 
                         public void callback(Exception result) {
@@ -265,9 +265,7 @@ public class MainActivity extends AppCompatActivity {
 
                     firebaseManager.loadUserID(listener);
                 }
-            })
-
-            .addOnFailureListener(new OnFailureListener() {
+            }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     //failed Signin in

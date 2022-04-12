@@ -21,6 +21,7 @@
             android:theme="@style/Theme.Charles_nfc.NoActionBar" />
 
         <activity android:name=".ScanActivity"/>
+        <activity android:name=".FragmentActivity"/>
         <activity android:name=".ShoppingCartActivity" android:exported="true"/>
         <activity android:name=".Checkout" android:parentActivityName=".ShoppingCartActivity" android:label="@string/checkout_label"> </activity>
         <activity android:name=".SelectTiming" android:parentActivityName=".Checkout" android:label="@string/select_timing_label"> </activity>
