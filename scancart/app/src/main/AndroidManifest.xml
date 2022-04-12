@@ -22,8 +22,8 @@
 
         <activity android:name=".ScanActivity"/>
         <activity android:name=".FragmentActivity"/>
-        <activity android:name=".ShoppingCartActivity" android:exported="true"/>
-        <activity android:name=".Checkout" android:parentActivityName=".ShoppingCartActivity" android:label="@string/checkout_label"> </activity>
+        <activity android:name=".Cart" android:exported="true"/>
+        <activity android:name=".Checkout" android:parentActivityName=".Cart" android:label="@string/checkout_label"> </activity>
         <activity android:name=".SelectTiming" android:parentActivityName=".Checkout" android:label="@string/select_timing_label"> </activity>
         <activity
             android:name=".EditProfile"

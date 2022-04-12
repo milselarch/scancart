@@ -190,7 +190,7 @@ public class ScanActivity extends AppCompatActivity {
                 }
 
                 Intent myIntent = new Intent(
-                    ScanActivity.this, ShoppingCartActivity.class
+                    ScanActivity.this, Cart.class
                 );
 
                 myIntent.putExtra("last_item", tagID); //Optional parameters

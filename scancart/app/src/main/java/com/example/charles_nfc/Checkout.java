@@ -59,7 +59,7 @@ public class Checkout extends AppCompatActivity {
         return_shopping_cart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent main_intent = new Intent(Checkout.this, ShoppingCartActivity.class);
+                Intent main_intent = new Intent(Checkout.this, Cart.class);
                 startActivity(main_intent);
             }
         });
@@ -106,7 +106,7 @@ public class Checkout extends AppCompatActivity {
                         @Override
                         public void callback(Object result) {
                             //Todo Intent to delivery page?
-                            Intent main_intent = new Intent(Checkout.this, ShoppingCartActivity.class);
+                            Intent main_intent = new Intent(Checkout.this, Cart.class);
                             startActivity(main_intent);
                         }
                     };
