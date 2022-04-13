@@ -1,11 +1,14 @@
 package com.example.charles_nfc;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -27,8 +30,9 @@ import java.util.Map;
 
 public class Delivery extends Fragment {
     FirebaseFirestore db;
-    private final Integer userID = 1;
     ArrayList<Order> orders = new ArrayList<Order>();
+    final ArrayList<Grocery> groceries = new ArrayList<>();
+    private final UserAccount account = UserAccount.getAccount();
 
     @Override
     public View onCreateView(
@@ -38,7 +42,10 @@ public class Delivery extends Fragment {
         super.onCreate(savedInstanceState);
         db = FirebaseFirestore.getInstance();
         CollectionReference orders_completed = db.collection("completed_orders");
-        Query query = orders_completed.whereEqualTo("user_id", userID);
+        int userID = account.getUserID();
+        Query query = orders_completed.whereEqualTo(
+            "user_id", userID
+        );
 
         query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @RequiresApi(api = Build.VERSION_CODES.N)
@@ -58,7 +65,7 @@ public class Delivery extends Fragment {
                     String order_date = (String) documentData.get("delivery_date");
                     String order_status = (String) documentData.get("delivery_status");
                     String order_id = (String) documentData.get("order_id");
-                    com.example.charles_nfc.Order order = new com.example.charles_nfc.Order(order_date, order_status, order_id);
+                    Order order = new Order(order_date, order_status, order_id);
                     orders.add(order);
                 }
 
@@ -73,6 +80,20 @@ public class Delivery extends Fragment {
                 OrdersAdapter ordersAdapter = new OrdersAdapter(context, orders);
                 orderlist.setAdapter(ordersAdapter);
                 orderlist.setClickable(true);
+
+                orderlist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                        Order order = (Order) adapterView.getItemAtPosition(position);
+                        String order_id = order.order_id;
+                        Log.d("ORDER_ID SELECTED", order_id);
+                        Log.d("ORDER_DATE", order.delivery_date);
+
+                        Intent intent = new Intent(Delivery.this.getContext(), GroceryList.class);
+                        intent.putExtra("order_id", order_id );
+                        startActivity(intent);
+                    }
+                });
             }
         });
 

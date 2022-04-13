@@ -35,6 +35,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -50,9 +51,12 @@ public class Shop extends Fragment {
     private NfcAdapter mNfcAdapter;
     private PendingIntent mPendingIntent;
     private Map<String, Object> itemDocument;
-    private final Integer userID = 1;
     private String tagID;
     Context context;
+
+    FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
+    private final UserAccount account = UserAccount.getAccount();
+    private Integer userID;
 
     @Override
     public View onCreateView(
@@ -79,6 +83,18 @@ public class Shop extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getContext();
+
+        if (!account.isLoggedIn()) {
+            Activity activity = getActivity();
+            if (activity == null) { return; }
+            account.logout(activity.getApplicationContext());
+            firebaseAuth.signOut();
+            startActivity(new Intent(
+                    activity, MainActivity.class
+            ));
+        } else {
+            userID = account.getUserID();
+        }
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (mNfcAdapter == null) {
@@ -228,17 +244,20 @@ public class Shop extends Fragment {
                     );
                 }
 
-                gotoCartFragment();
+                loadFragmentActivity(R.id.cart);
             }
         });
     }
 
-    void gotoCartFragment() {
-        FragmentManager manager = getParentFragmentManager();
-        manager.beginTransaction().replace(
-            R.id.container, new Cart()
-        ).addToBackStack("").commit();
+    void loadFragmentActivity(int fragmentID) {
+        Intent main_intent = new Intent(
+            getActivity(), FragmentActivity.class
+        );
+        // tell fragment activity we want to go to cart fragment
+        main_intent.putExtra("fragment_id", fragmentID);
+        startActivity(main_intent);
     }
+
 
     public void onResume() {
         super.onResume();

@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -37,8 +38,9 @@ public class Checkout extends AppCompatActivity {
     final int REQUEST_CODE_DATETIME = 1000;
     private static final String TAG = "Checkout";
 
-    //TODO: Remove this eventually
-    private final Integer userID = 1;
+    FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
+    private final UserAccount account = UserAccount.getAccount();
+    private Integer userID;
 
     void loadFragmentActivity(int fragmentID) {
         Intent main_intent = new Intent(
@@ -54,6 +56,16 @@ public class Checkout extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.checkout);
         Intent intent = getIntent();
+
+        if (!account.isLoggedIn()) {
+            account.logout(getApplicationContext());
+            firebaseAuth.signOut();
+            startActivity(new Intent(
+                Checkout.this, MainActivity.class
+            ));
+        } else {
+            userID = account.getUserID();
+        }
 
         text_address = findViewById(R.id.address);
         text_date = findViewById(R.id.date);
@@ -178,13 +190,13 @@ public class Checkout extends AppCompatActivity {
     }
 
     protected void FirebaseCheckOut(
-            String str_date,
-            String str_time,
-            List<Map> shopping_cart_array,
-            int userID,
-            String orderID,
-            double total_cost,
-            FirebaseHandler.FireCallback callback
+        String str_date,
+        String str_time,
+        List<Map> shopping_cart_array,
+        int userID,
+        String orderID,
+        double total_cost,
+        FirebaseHandler.FireCallback callback
     ) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference cart = db.collection("completed_orders");

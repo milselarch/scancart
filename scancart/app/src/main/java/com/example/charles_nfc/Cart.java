@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -41,12 +43,28 @@ public class Cart extends Fragment {
     TextView cart_total;
     String cost_string;
 
-    //TODO: Remove this eventually
-    private final Integer userID = 1;
     private static final String TAG = "ShoppingCart";
+    FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
+    private final UserAccount account = UserAccount.getAccount();
+    private Integer userID;
 
     public void onCreate() {
         Log.e(TAG, "onResume");
+        this.loadUser();
+    }
+
+    void loadUser() {
+        if (!account.isLoggedIn()) {
+            Activity activity = getActivity();
+            if (activity == null) { return; }
+            account.logout(activity.getApplicationContext());
+            firebaseAuth.signOut();
+            startActivity(new Intent(
+                    activity, MainActivity.class
+            ));
+        } else {
+            userID = account.getUserID();
+        }
     }
 
     @Override
@@ -72,6 +90,7 @@ public class Cart extends Fragment {
         super.onStart();
         View currentView = getView();
         if (currentView == null) { return; }
+        this.loadUser();
 
         ImageView footerView = currentView.findViewById(R.id.cart_footer);
         footerView.setOnTouchListener(new View.OnTouchListener() {
@@ -88,7 +107,9 @@ public class Cart extends Fragment {
         cart_total = currentView.findViewById(R.id.cart_total);
 
         shopping_cart.clear();
-        ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(shopping_cart);
+        ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
+            shopping_cart, userID
+        );
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(
             this.getContext(), RecyclerView.VERTICAL, false
@@ -117,7 +138,9 @@ public class Cart extends Fragment {
 
                     shopping_cart = new ArrayList<>();
                     if (value.isEmpty()) {
-                        ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(shopping_cart);
+                        ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
+                            shopping_cart, userID
+                        );
                         mRecyclerView.setAdapter(adapter);
                         mRecyclerView.setLayoutManager(new LinearLayoutManager(
                             context, RecyclerView.VERTICAL, false
@@ -158,7 +181,9 @@ public class Cart extends Fragment {
                                         ).show();
                                     }
 
-                                    ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(shopping_cart);
+                                    ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
+                                        shopping_cart, userID
+                                    );
                                     adapter.sort();
 
                                     mRecyclerView.setAdapter(adapter);

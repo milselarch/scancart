@@ -30,10 +30,14 @@ public class ShoppingCartAdapterClass extends RecyclerView.Adapter<ShoppingCartA
     ArrayList<ShoppingCartItemModel> cart = new ArrayList<>();
 
     //TODO: Remove this eventually
-    private final Integer userID = 1;
+    private final Integer userID;
 
-    public ShoppingCartAdapterClass(ArrayList<ShoppingCartItemModel> cart) {
+    public ShoppingCartAdapterClass(
+        ArrayList<ShoppingCartItemModel> cart,
+        Integer userID
+    ) {
         this.cart = cart;
+        this.userID = userID;
     }
 
     @SuppressLint("NotifyDataSetChanged")
