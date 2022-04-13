@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
@@ -64,9 +65,18 @@ public class MainActivity extends AppCompatActivity {
         if (account.isLoggedIn()) {
             Toast.makeText(this, "logged in", Toast.LENGTH_SHORT).show();
             startFragmentActivity();
-        } else {
-            Toast.makeText(this, "not logged in", Toast.LENGTH_SHORT).show();
         }
+
+        /*
+        binding.register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(
+                    MainActivity.this, RegisterActivity.class
+                ));
+            }
+        });
+        */
 
         Callbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override
@@ -159,12 +169,12 @@ public class MainActivity extends AppCompatActivity {
         pd.show();
 
         PhoneAuthOptions options =
-                PhoneAuthOptions.newBuilder(firebaseAuth)
-                .setPhoneNumber(phone)
-                .setTimeout(60L, TimeUnit.SECONDS)
-                .setActivity(this)
-                .setCallbacks(Callbacks)
-                .build();
+            PhoneAuthOptions.newBuilder(firebaseAuth)
+            .setPhoneNumber(phone)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(this)
+            .setCallbacks(Callbacks)
+            .build();
 
         PhoneAuthProvider.verifyPhoneNumber(options);
     }
@@ -176,13 +186,13 @@ public class MainActivity extends AppCompatActivity {
         pd.show();
 
         PhoneAuthOptions options=
-                PhoneAuthOptions.newBuilder(firebaseAuth)
-                .setPhoneNumber(phone)
-                .setTimeout(60L, TimeUnit.SECONDS)
-                .setActivity(this)
-                .setCallbacks(Callbacks)
-                .setForceResendingToken(token)
-                .build();
+            PhoneAuthOptions.newBuilder(firebaseAuth)
+            .setPhoneNumber(phone)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(this)
+            .setCallbacks(Callbacks)
+            .setForceResendingToken(token)
+            .build();
 
         PhoneAuthProvider.verifyPhoneNumber(options);
     }
@@ -220,12 +230,18 @@ public class MainActivity extends AppCompatActivity {
         firebaseAuth.signInWithCredential(credential)
             .addOnSuccessListener(new OnSuccessListener<AuthResult>(){
                 @Override
-                public void onSuccess(AuthResult authResult){
+                public void onSuccess(AuthResult authResult) {
                     //Successful sign in
                     pd.dismiss();
                     String phone = firebaseAuth.getCurrentUser().getPhoneNumber();
+                    FirebaseUser user = authResult.getUser();
+
+                    assert user != null;
+                    final String UUID = user.getUid();
+
                     Toast.makeText(
-                        MainActivity.this, "Logged in as" + phone,
+                        MainActivity.this,
+                        "Logged in as" + phone,
                         Toast.LENGTH_SHORT
                     ).show();
 
@@ -234,11 +250,13 @@ public class MainActivity extends AppCompatActivity {
                         public void callback(Object result) {
                             assert result != null;
                             if (result instanceof Exception) {
+                                Log.d("FIRE_LOGIN_EX", String.valueOf((Exception) result));
                                 callback((Exception) result);
                                 return;
                             }
 
                             int userID = (Integer) result;
+                            Log.d("FIRE_LOGIN_ID", String.valueOf(userID));
                             callback(userID);
                         }
 
@@ -246,7 +264,13 @@ public class MainActivity extends AppCompatActivity {
                             if (userID == -1) {
                                 // user has no userID set
                                 Log.d("USER_ID", "No id set");
-                                startFragmentActivity();
+                                Intent registerIntent = new Intent(
+                                    MainActivity.this,
+                                    RegisterActivity.class
+                                );
+
+                                registerIntent.putExtra("UUID", UUID);
+                                startActivity(registerIntent);
                                 return;
                             }
 

@@ -151,9 +151,7 @@ public class EditProfile extends AppCompatActivity {
         b2Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(
-                    EditProfile.this, Profile.class
-                ));
+                loadFragmentActivity(R.id.profile);
             }
         });
     }

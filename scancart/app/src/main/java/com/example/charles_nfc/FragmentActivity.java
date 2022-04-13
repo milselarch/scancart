@@ -26,6 +26,8 @@ public class FragmentActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_holder);
+        Log.d("ACCOUNT_CC", String.valueOf(account.getUserID()));
+
         // disable auto dark mode across app
         AppCompatDelegate.setDefaultNightMode(
             AppCompatDelegate.MODE_NIGHT_NO

@@ -57,15 +57,35 @@
             android:textColor="#000"
             android:textColorHint="#c5c5c5" />
 
-        <Button
-            android:id="@+id/phoneContinueButton"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="5dp"
-            android:text="Continue"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            >
+            <!--
+            <Button
+                android:id="@+id/register"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:text="register"
+                android:textColor="@color/white"
+                />
+            -->
+            <Button
+                android:id="@+id/phoneContinueButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:text="Continue"
+                android:textColor="@color/white"
+                />
+        </LinearLayout>
 
-            />
     </LinearLayout>
 
     <!--For OTP -->
@@ -124,6 +144,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="5dp"
+            android:textColor="@color/white"
             android:text="Continue"
             />
     </LinearLayout>

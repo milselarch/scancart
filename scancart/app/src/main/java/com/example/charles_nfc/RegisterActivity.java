@@ -14,9 +14,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class register extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
     private Button signUp;
     private Button b2Login;
     private EditText nameField;
@@ -28,6 +29,7 @@ public class register extends AppCompatActivity {
     private Spinner healthConditionsChoice;
 
     private final FirebaseHandler firebaseManager = new FirebaseHandler();
+    private final FirebaseAuth fireAuth = FirebaseHandler.getInstanceAuth();
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore fStore;
 
@@ -51,18 +53,18 @@ public class register extends AppCompatActivity {
         postalCodeField = findViewById(R.id.postalcode);
         floorAndUnitField = findViewById(R.id.unitnumber);
 
+        // FirebaseUser user = fireAuth.getCurrentUser();
         phoneNumberField.setText(FirebaseHandler.getPhone());
 
         //Retrieve ID from login
         Intent uidRegister = getIntent();
         String UID = uidRegister.getStringExtra("UUID");
-        Log.d(TAG, UID);
-
+        assert UID != null;
+        // Log.d(TAG, UID);
 
         //Button IDS
         signUp = findViewById(R.id.signUp);
         b2Login = findViewById(R.id.b2loginName);
-
 
         //Spinner Handler
         healthConditionsChoice = (Spinner) findViewById(R.id.healthConditions);
@@ -101,7 +103,7 @@ public class register extends AppCompatActivity {
                         if ((maxUserID == null) || (maxUserID == -1)) {
                             Log.d("FIRE_ERROR", "FAILED TO ACQUIRE USERID");
                             Toast.makeText(
-                                register.this,
+                                RegisterActivity.this,
                                 "failed to acquire user id",
                                 Toast.LENGTH_SHORT
                             ).show();
@@ -115,6 +117,7 @@ public class register extends AppCompatActivity {
                             floorAndUnit, spinnerChoice, newUserID
                         );
 
+                        Log.d("FIRE_USER", user.toString());
                         FirebaseHandler.registerUser(user, fStore, (Object editResult) -> {
                             boolean success = (Boolean) editResult;
                             onRegisterComplete(success);
@@ -151,7 +154,7 @@ public class register extends AppCompatActivity {
 
     void loadFragmentActivity(int fragmentID) {
         Intent main_intent = new Intent(
-            register.this, FragmentActivity.class
+            RegisterActivity.this, FragmentActivity.class
         );
         // tell fragment activity we want to go to cart fragment
         main_intent.putExtra("fragment_id", fragmentID);

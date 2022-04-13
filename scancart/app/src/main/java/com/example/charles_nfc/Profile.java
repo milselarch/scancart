@@ -170,7 +170,7 @@ public class Profile extends Fragment {
                     } else {
                         Log.d(TAG, "No such document");
                         Intent register = new Intent(
-                            activity, com.example.charles_nfc.register.class
+                            activity, RegisterActivity.class
                         );
 
                         register.putExtra("UUID", uID);

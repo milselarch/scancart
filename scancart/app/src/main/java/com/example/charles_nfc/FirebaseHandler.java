@@ -293,6 +293,7 @@ public class FirebaseHandler {
                         maxUserID = (Long) doc.get("user_id");
                     }
 
+                    Log.d("MAX_USER_ID", String.valueOf(maxUserID));
                     resultHandler.callback(maxUserID);
                 }
             }
