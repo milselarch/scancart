@@ -1,67 +1,37 @@
 package com.example.charles_nfc;
 
+import android.util.Pair;
+
 import java.util.ArrayList;
 
-public class Promise<T, E> {
+abstract class Resolvable<T, E> {
     protected final int FAILED = -1;
     protected final int RUNNING = 0;
     protected final int SUCCESS = 1;
     protected volatile int status;
 
-    protected Throwable error;
-    protected T result;
-
-    protected ArrayList<Promise<T, E>> callbacks;
     protected Resolver<E> resolver;
+    protected Throwable error;
 
-    Promise() {
+    Resolvable() {
         this.status = RUNNING;
     }
-
-    /*
-    Promise(Resolver<E> resolver) {
-        super();
-        this.resolver = resolver;
-    }
-    */
-
-    public void resolve(T result) {
-        this.status = SUCCESS;
-        this.result = result;
-
-        for (Promise<T, E> callback: callbacks) {
-            Resolver<E> resolver = callback.getResolver();
-            callback.onReady(result, resolver);
-        }
-    }
-
-    public void reject(Throwable error) {
-        this.status = FAILED;
-        this.error = error;
-
-        for (Promise<T, E> callback: callbacks) {
-            callback.onError(error);
-        }
-    }
-
-    // override to use as callback / chain more promises
-    public void onReady(T result, Resolver<E> resolver) {}
 
     public int getStatus() {
         return status;
     }
 
-    public void onError(Throwable error) {}
+    protected class Resolver<M extends E> {
+        private final Resolvable<T, M> promise;
 
-    protected class Resolver<M> {
-        private final Promise<T, M> promise;
-
-        Resolver(Promise<T, M> promise) {
+        Resolver(Resolvable<T, M> promise) {
             this.promise = promise;
         }
-        public void resolve(T value) {
+
+        public void resolve(M value) {
             promise.resolve(value);
         }
+
         public void reject(Throwable error) {
             promise.reject(error);
         }
@@ -69,74 +39,133 @@ public class Promise<T, E> {
 
     public Resolver<E> getResolver() {
         if (this.resolver == null) {
-            this.resolver = new Resolver<>(this);
+            this.resolver = new Resolver<E>(this);
         }
         return this.resolver;
     }
 
-    Promise<T, E> then(Promise<T, E> promise) {
+    abstract boolean resolve(E value);
+    abstract boolean reject(Throwable error);
+    abstract void onReady(T result, Resolver<E> resolver);
+}
+
+public abstract class Promise<T, E, B> extends Resolvable<T, E> {
+    protected E result;
+    protected ArrayList<Promise<E, B, ?>> followUps;
+
+    Promise() {
+        this(false);
+    }
+
+    Promise(boolean start) {
+        if (start) {
+            this.status = SUCCESS;
+        }
+    }
+
+    @Override
+    public void onReady(T result, Resolver<E> resolver) {
+        this.onPromiseReady(result, resolver);
+    };
+
+    abstract void onPromiseReady(T result, Resolver<E> resolver);
+    abstract public void onError(Throwable error);
+
+    @Override
+    public boolean resolve(E result) {
+        return this.resolvePromise(result);
+    }
+
+    public boolean resolvePromise(E result) {
+        // promise cannot be resolved more than once
+        if (this.status != RUNNING) {
+            return false;
+        }
+
+        this.status = SUCCESS;
+        this.result = result;
+
+        for (Promise<E, B, ?> callback: followUps) {
+            Promise<E, B, ?>.Resolver<B> resolver = callback.getResolver();
+            callback.onReady(result, resolver);
+        }
+
+        return true;
+    }
+
+    public boolean reject(Throwable error) {
+        // promise cannot be rejected more than once
+        if (this.status != RUNNING) {
+            return false;
+        }
+
+        this.status = FAILED;
+        this.error = error;
+
+        for (Promise<E, B, ?> callback: followUps) {
+            callback.onError(error);
+            callback.reject(error);
+        }
+
+        return true;
+    }
+
+    public Promise<E, B, ?> then(Promise<E, B, ?> promise) {
         if (this.status == RUNNING) {
-            this.callbacks.add(promise);
+            this.followUps.add(promise);
         } else if (this.status == FAILED) {
             promise.onError(this.error);
         } else if (this.status == SUCCESS) {
-            Resolver<E> resolver = promise.getResolver();
+            Resolvable<E, B>.Resolver<B> resolver = promise.getResolver();
             promise.onReady(this.result, resolver);
         }
 
         return promise;
     }
-}
 
-class PromiseAll<T, E> extends Promise<T, E> {
-    ArrayList<T> results;
-    ArrayList<Promise<T,E>> promises;
-    protected ArrayList<Promise<ArrayList<T>, E>> callbacks;
-    protected Resolver<E> resolver;
-    protected int unresolved;
+    public Promise<ArrayList<E>, ArrayList<Pair<E,B>>, ?> awaitAll(
+        ArrayList<Promise<E, B, E>> promises
+    ) {
+        /*
+        E is datatype of values of this Promise
+        Pair<E,B> is datatype of ArrayList that aggregator Promise resolves with
+        */
+        final int numPromises = promises.size();
 
-    PromiseAll(ArrayList<Promise<T,E>> promises) {
-        super();
-        this.promises = promises;
-        this.unresolved = promises.size();
+        return new Promise<
+            ArrayList<E>, ArrayList<Pair<E, B>>, Object
+        >() {
+            @Override
+            void onPromiseReady(
+                ArrayList<E> inputs, Resolver<ArrayList<Pair<E, B>>> completer
+            ) {
+                ArrayList<Pair<E, B>> results = new ArrayList<>();
 
-        for (Promise<T, E> promise: promises) {
-            promise.then(new Promise<T, E>() {
-                @Override
-                public void onReady(T result, Resolver<E> resolver) {
-                    unresolved -= 1;
-                    results.add(result);
-                    if (unresolved == 0) {
-                        // resolve PromiseAll when
-                        // all promises have been resolved
-                        PromiseAll.this.resolve(results);
-                    }
+                for (int k=0; k<inputs.size(); k++) {
+                    Promise<E, B, E> promise = promises.get(k);
+                    E input = inputs.get(k);
+
+                    promise.then(new Promise<B, E, Object>() {
+                        @Override
+                        void onPromiseReady(B result, Resolver<E> resolver) {
+                            results.add(new Pair<E, B>(input, result));
+                            if (results.size() == numPromises) {
+                                completer.resolve(results);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable error) {
+                            completer.reject(error);
+                        }
+                    });
                 }
-                @Override
-                public void onError(Throwable error) {
-                    if (this.getStatus() == this.RUNNING) {
-                        PromiseAll.this.status = FAILED;
-                        PromiseAll.this.onError(error);
-                    }
-                }
-            });
-        }
-    }
+            }
 
-    public void resolve(ArrayList<T> result) {
-        this.status = SUCCESS;
+            @Override
+            public void onError(Throwable error) {
 
-        for (Promise<ArrayList<T>, E> callback: callbacks) {
-            callback.onReady(this.results, callback.getResolver());
-        }
-    }
-
-    public void reject(Throwable error) {
-        this.status = FAILED;
-        this.error = error;
-
-        for (Promise<ArrayList<T>, E> callback: callbacks) {
-            callback.onError(this.error);
-        }
+            }
+        };
     }
 }

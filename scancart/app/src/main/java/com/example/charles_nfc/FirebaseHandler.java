@@ -22,7 +22,10 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class FirebaseHandler {
     protected static FirebaseFirestore fStore;
@@ -128,6 +131,7 @@ public class FirebaseHandler {
             }
         });
     }
+
     public static void editUser(
         User user, FirebaseFirestore fStore, FireCallback onEditComplete
     ) {
@@ -146,6 +150,91 @@ public class FirebaseHandler {
                 onEditComplete.callback(false);
             }
         });
+    }
+
+    void loadShoppingCart(Integer userID) {
+        FirebaseFirestore db = getInstanceDatabase();
+
+        Consumer<ArrayList<Map<String, Object>>> onDocumentsLoad = (
+            ArrayList<Map<String, Object>> documents
+        ) -> {
+            ArrayList<Promise<
+                Map<String, Object>, ShoppingCartItemModel, ?
+            >> promises = new ArrayList<>();
+
+
+            for (Map<String, Object> doc: documents) {
+                String tag_id = (String) doc.get("tag_id");
+                Promise<
+                    Map<String, Object>, ShoppingCartItemModel, ?
+                    > subpromise = new Promise<
+                    Map<String, Object>, ShoppingCartItemModel, Object
+                >() {
+                    @Override
+                    void onPromiseReady(
+                        Map<String, Object> result,
+                        Resolver<ShoppingCartItemModel> resolver
+                    ) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+
+                    }
+                };
+            }
+        };
+
+        Promise <
+            ArrayList<Map<String, Object>>,
+            ArrayList<Promise<Map<String, Object>, ShoppingCartItemModel, ?>>,
+            Void
+        > promise = new Promise<
+            ArrayList<Map<String, Object>>,
+            ArrayList<Promise<Map<String, Object>, ShoppingCartItemModel, ?>>,
+            Void
+        > (true) {
+            @Override
+            void onPromiseReady(
+                ArrayList<Map<String, Object>> result,
+                Resolver<
+                    ArrayList<Promise<
+                    Map<String, Object>,
+                    ShoppingCartItemModel, ?
+                    >
+                >> resolver
+            ) {
+                ArrayList<Map<String, Object>> documents = new ArrayList<>();
+                EventListener<QuerySnapshot> listener = new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(
+                        @Nullable QuerySnapshot value,
+                        @Nullable FirebaseFirestoreException error
+                    ) {
+                        if (error != null) {
+                            resolver.reject(error);
+                            return;
+                        } else if (value == null) {
+                            resolver.reject(new NullPointerException());
+                            return;
+                        }
+
+                        for (QueryDocumentSnapshot doc : value) {
+                            documents.add(doc.getData());
+                        }
+                    }
+                };
+
+                db.collection("shopping_cart")
+                    .whereEqualTo("user_id", userID)
+                    .addSnapshotListener(listener);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+            }
+        };
     }
 
     interface FireCallback {
