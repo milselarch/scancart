@@ -27,17 +27,25 @@ public class FragmentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_holder);
         // disable auto dark mode across app
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        AppCompatDelegate.setDefaultNightMode(
+            AppCompatDelegate.MODE_NIGHT_NO
+        );
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, shop).commit();
-        bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int itemID = item.getItemId();
-                return selectFragment(itemID);
+        getSupportFragmentManager()
+            .beginTransaction()
+            .replace(R.id.container, shop)
+            .commit();
+
+        bottomNavigationView.setOnItemSelectedListener(
+            new NavigationBarView.OnItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    int itemID = item.getItemId();
+                    return selectFragment(itemID);
+                }
             }
-        });
+        );
 
         Intent callingIntent = getIntent();
         handleCallingIntent(callingIntent);

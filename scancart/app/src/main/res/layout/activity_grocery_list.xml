@@ -9,7 +9,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="600dp"
-        android:id="@+id/recyclerview"
-        tools:listitem="@layout/shoppinglist"/>
+        android:id="@+id/recycler_holder"
+        tools:listitem="@layout/recycler_items"/>
 
 </LinearLayout>

@@ -8,7 +8,6 @@ public class Grocery {
     private String quantity;
     private String tag_id;
 
-
     public Grocery(){
     }
 

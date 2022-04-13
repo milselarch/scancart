@@ -2,6 +2,8 @@ package com.example.charles_nfc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 public class GroceryAdapter extends RecyclerView.Adapter<GroceryAdapter.ContactViewHolder>{
+
     Context context;
     LayoutInflater inflater;
     Model.DataSource datasource;
@@ -26,7 +29,7 @@ public class GroceryAdapter extends RecyclerView.Adapter<GroceryAdapter.ContactV
     @NonNull
     @Override
     public ContactViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View contactView = inflater.inflate(R.layout.cardview, parent, false);
+        View contactView = inflater.inflate(R.layout.recycler_items, parent, false);
         return new ContactViewHolder(contactView);
     }
 
@@ -36,6 +39,7 @@ public class GroceryAdapter extends RecyclerView.Adapter<GroceryAdapter.ContactV
         holder.textViewCost.setText(this.datasource.get(position).cost);
         holder.textViewId.setText(this.datasource.get(position).tag_id);
         holder.textViewQty.setText(this.datasource.get(position).quantity);
+
         new DownloadImageTask(new DownloadImageTask.customListener() {
             @Override
             public void postExecute(Bitmap result) {

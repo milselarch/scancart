@@ -1,5 +1,6 @@
 package com.example.charles_nfc;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -18,6 +19,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -30,9 +32,24 @@ import java.util.Map;
 
 public class Delivery extends Fragment {
     FirebaseFirestore db;
-    ArrayList<Order> orders = new ArrayList<Order>();
-    final ArrayList<Grocery> groceries = new ArrayList<>();
+    ArrayList<Order> orders;
     private final UserAccount account = UserAccount.getAccount();
+    private FirebaseAuth firebaseAuth;
+    private Integer userID;
+
+    void loadUser() {
+        if (!account.isLoggedIn()) {
+            Activity activity = getActivity();
+            if (activity == null) { return; }
+            account.logout(activity.getApplicationContext());
+            firebaseAuth.signOut();
+            startActivity(new Intent(
+                activity, MainActivity.class
+            ));
+        } else {
+            userID = account.getUserID();
+        }
+    }
 
     @Override
     public View onCreateView(
@@ -40,6 +57,10 @@ public class Delivery extends Fragment {
         Bundle savedInstanceState
     ) {
         super.onCreate(savedInstanceState);
+        this.loadUser();
+
+        orders = new ArrayList<Order>();
+
         db = FirebaseFirestore.getInstance();
         CollectionReference orders_completed = db.collection("completed_orders");
         int userID = account.getUserID();
@@ -89,7 +110,10 @@ public class Delivery extends Fragment {
                         Log.d("ORDER_ID SELECTED", order_id);
                         Log.d("ORDER_DATE", order.delivery_date);
 
-                        Intent intent = new Intent(Delivery.this.getContext(), GroceryList.class);
+                        Intent intent = new Intent(
+                            getActivity(), GroceryList.class
+                        );
+
                         intent.putExtra("order_id", order_id );
                         startActivity(intent);
                     }

@@ -14,23 +14,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Charles_nfc">
-        <activity
-            android:name=".TestCart"
-            android:exported="false"
-            android:label="@string/title_activity_test_shopping_cart"
-            android:theme="@style/Theme.Charles_nfc.NoActionBar" />
 
-        <activity android:name=".Shop"/>
+        <activity android:name=".GroceryList"/>
         <activity android:name=".FragmentActivity"/>
-        <activity android:name=".Cart" android:exported="true"/>
         <activity android:name=".Checkout" android:parentActivityName=".Cart" android:label="@string/checkout_label"> </activity>
         <activity android:name=".SelectTiming" android:parentActivityName=".Checkout" android:label="@string/select_timing_label"> </activity>
         <activity
             android:name=".EditProfile"
             android:exported="false" />
-        <activity
-            android:name=".Profile"
-            android:exported="false" />
+
         <activity
             android:name=".register"
             android:exported="false" />
