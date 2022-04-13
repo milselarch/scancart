@@ -8,7 +8,7 @@
     android:background="#f7f7f7"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context=".ScanActivity">
+    tools:context=".Shop">
 
     <ImageView
         android:id="@+id/icon"

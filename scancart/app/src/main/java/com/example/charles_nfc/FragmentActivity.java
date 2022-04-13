@@ -1,5 +1,6 @@
 package com.example.charles_nfc;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -29,7 +30,7 @@ public class FragmentActivity extends AppCompatActivity {
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch(item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.shop:
                         getSupportFragmentManager().beginTransaction().replace(R.id.container, shop).commit();
                         return true;
@@ -47,4 +48,11 @@ public class FragmentActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        shop.onNewIntent(intent);
+    }
+
 }

@@ -127,7 +127,7 @@ public class register extends AppCompatActivity {
         b2Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(register.this, ScanActivity.class));
+                startActivity(new Intent(register.this, Shop.class));
             }
         });
     }

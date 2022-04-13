@@ -45,6 +45,11 @@ public class Cart extends Fragment {
 
     public void onCreate() {
         Log.e(TAG, "onResume");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         loadItems();
     }
 
