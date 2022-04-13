@@ -46,9 +46,11 @@ public class OrdersAdapter extends ArrayAdapter<Order>{
 
         Promise<
             Pair<Bitmap, Integer>, Pair<Bitmap, Integer>, Object
-        > promise = order.asyncLoadImage();
+        > loadImagePromise = order.asyncLoadImage();
 
-        promise.then(new Promise<Pair<Bitmap, Integer>, Object, Object>() {
+        loadImagePromise.then(new Promise<
+            Pair<Bitmap, Integer>, Object, Object
+        >() {
             @Override
             public void onReady(
                 Pair<Bitmap, Integer> result,

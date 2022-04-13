@@ -24,6 +24,9 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+
 public class EditProfile extends AppCompatActivity {
     private Button Confirm;
     private Button b2Login;
@@ -40,6 +43,7 @@ public class EditProfile extends AppCompatActivity {
     private FirebaseFirestore fStore;
     private final UserAccount account = UserAccount.getAccount();
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +83,11 @@ public class EditProfile extends AppCompatActivity {
             }
         });
 
-        this.loadDefaults();
+        try {
+            this.loadDefaults();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         Confirm.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.N)
@@ -150,28 +158,12 @@ public class EditProfile extends AppCompatActivity {
         });
     }
 
-    void loadDefaults() {
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    void loadDefaults() throws InterruptedException {
         CollectionReference collection = fStore.collection("users");
         String UUID = FirebaseHandler.getUID();
 
-        if (UUID != null) {
-            DocumentReference result = collection.document(UUID);
-            result.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot user = task.getResult();
-                        if (user.exists()) {
-                            nameField.setText(user.getData().get("userName").toString());
-                            phoneNumberField.setText(user.getData().get("userPhoneNumber").toString());
-                            streetAddressField.setText(user.getData().get("userStreetAddress").toString());
-                            postalCodeField.setText(user.getData().get("userPostalCode").toString());
-                            floorAndUnitField.setText(user.getData().get("userFloorAndUnit").toString());
-                        }
-                    }
-                }
-            });
-        } else {
+        if (UUID == null) {
             account.logout(getApplicationContext());
             firebaseAuth.signOut();
 
@@ -185,7 +177,18 @@ public class EditProfile extends AppCompatActivity {
                 EditProfile.this, MainActivity.class
             ));
             finish();
+            return;
         }
+
+        CompletableFuture<DocumentSnapshot> promise = firebaseManager.loadUserInfo(UUID);
+        promise.thenAccept(user -> {
+            if (!user.exists()) { return; }
+            nameField.setText(user.getData().get("userName").toString());
+            phoneNumberField.setText(user.getData().get("userPhoneNumber").toString());
+            streetAddressField.setText(user.getData().get("userStreetAddress").toString());
+            postalCodeField.setText(user.getData().get("userPostalCode").toString());
+            floorAndUnitField.setText(user.getData().get("userFloorAndUnit").toString());
+        });
     }
 
     void loadFragmentActivity(int fragmentID) {

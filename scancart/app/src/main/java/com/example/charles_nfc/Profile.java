@@ -5,13 +5,16 @@ import static android.content.ContentValues.TAG;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.example.charles_nfc.databinding.ActivityProfileactivityBinding;
@@ -23,11 +26,17 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.concurrent.CompletableFuture;
+
 public class Profile extends Fragment {
     FirebaseAuth firebaseAuth;
     FirebaseFirestore fStore;
     final UserAccount account = UserAccount.getAccount();
     private ActivityProfileactivityBinding binding;
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
+
+    private TextView nameView;
+    private TextView phoneView;
 
     @Override
     public View onCreateView(
@@ -42,10 +51,15 @@ public class Profile extends Fragment {
         return binding.getRoot();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onStart() {
         super.onStart();
-        loadUI();
+        try {
+            loadUI();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -54,17 +68,41 @@ public class Profile extends Fragment {
         binding = null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        loadUI();
+        try {
+            loadUI();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    void loadUI() {
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    void loadUI() throws InterruptedException {
         if (binding == null) { return; }
         Activity activity = getActivity();
         if (activity == null) { return; }
         Context context = getActivity().getApplicationContext();
+
+        String UUID = FirebaseHandler.getUID();
+        if (UUID == null) { return; }
+
+        nameView = activity.findViewById(R.id.name);
+        phoneView = activity.findViewById(R.id.phoneTv);
+
+        CompletableFuture<DocumentSnapshot> promise = firebaseManager.loadUserInfo(UUID);
+        promise.thenAccept(user -> {
+            if (!user.exists()) { return; }
+            String name = user.getData().get("userName").toString();
+            String phoneNumber = user.getData().get("userPhoneNumber").toString();
+
+            nameView.setText(name);
+            phoneView.setText(String.format(
+                "(%s)", phoneNumber
+            ));
+        });
 
         firebaseAuth = FirebaseHandler.getInstanceAuth();
         fStore = FirebaseHandler.getInstanceDatabase();

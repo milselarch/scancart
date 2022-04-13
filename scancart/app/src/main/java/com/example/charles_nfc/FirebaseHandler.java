@@ -14,7 +14,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -25,6 +27,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 public class FirebaseHandler {
@@ -35,7 +40,7 @@ public class FirebaseHandler {
     };
 
     public static FirebaseFirestore getInstanceDatabase(){
-        if (fStore == null){
+        if (fStore == null) {
             fStore = FirebaseFirestore.getInstance();
         }
         return fStore;
@@ -232,14 +237,43 @@ public class FirebaseHandler {
             }
 
             @Override
-            public void onError(Throwable error) {
-            }
+            public void onError(Throwable error) { }
         };
     }
 
     interface FireCallback {
         void callback(Object result);
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public CompletableFuture<DocumentSnapshot> loadUserInfo(String UUID)
+        throws InterruptedException
+    {
+        assert UUID != null;
+        getInstanceDatabase();
+
+        CompletableFuture<DocumentSnapshot> completableFuture = new CompletableFuture<>();
+        CollectionReference collection = fStore.collection("users");
+        DocumentReference result = collection.document(UUID);
+
+        result.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    completableFuture.completeExceptionally(
+                        new FirebaseFirestoreException(
+                            "firestore load failed",
+                            FirebaseFirestoreException.Code.DATA_LOSS
+                        )
+                    );
+                }
+                DocumentSnapshot user = task.getResult();
+                completableFuture.complete(user);
+            }
+        });
+
+        return completableFuture;
+    };
 
     public void getMaxUserID(FireCallback resultHandler) {
         getInstanceDatabase();

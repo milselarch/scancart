@@ -3,6 +3,7 @@ package com.example.charles_nfc;
 import android.util.Pair;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 abstract class Resolvable<T, E> {
     protected final int FAILED = -1;
@@ -37,6 +38,11 @@ abstract class Resolvable<T, E> {
         }
     }
 
+    interface Callback<M> {
+        public void onComplete(M result);
+        public void onError(Throwable error);
+    }
+
     public Resolver<E> getResolver() {
         if (this.resolver == null) {
             this.resolver = new Resolver<E>(this);
@@ -51,7 +57,12 @@ abstract class Resolvable<T, E> {
 
 public abstract class Promise<T, E, B> extends Resolvable<T, E> {
     protected E result;
-    final protected ArrayList<Promise<E, B, ?>> followUps = new ArrayList<>();
+    final protected ArrayList<
+        Promise<E, B, ?>
+    > followUps = new ArrayList<>();
+
+    // callbacks that are fired when current promise is resolved
+    ArrayList<Callback<T>> readyCallbacks = new ArrayList<>();
 
     Promise() {
         this(false);
@@ -63,12 +74,33 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         }
     }
 
+    private void ready(T result, Resolver<E> resolver) {
+        for (Callback<T> callback: readyCallbacks) {
+            callback.onComplete(result);
+        }
+        this.onReady(result, resolver);
+    }
+
+    private void error(Throwable error) {
+        for (Callback<T> callback: readyCallbacks) {
+            callback.onError(error);
+        }
+        this.onError(error);
+    }
+
     abstract public void onReady(T result, Resolver<E> resolver);
     abstract public void onError(Throwable error);
 
     @Override
     public boolean resolve(E result) {
         return this.resolvePromise(result);
+    }
+
+    public Promise<T, E, B> attachReadyCallback(
+        Callback<T> callback
+    ) {
+        this.readyCallbacks.add(callback);
+        return this;
     }
 
     public boolean resolvePromise(E result) {
@@ -80,9 +112,9 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         this.status = SUCCESS;
         this.result = result;
 
-        for (Promise<E, B, ?> callback: followUps) {
-            Promise<E, B, ?>.Resolver<B> resolver = callback.getResolver();
-            callback.onReady(result, resolver);
+        for (Promise<E, B, ?> next: followUps) {
+            Promise<E, B, ?>.Resolver<B> resolver = next.getResolver();
+            next.ready(result, resolver);
         }
 
         return true;
@@ -97,9 +129,9 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         this.status = FAILED;
         this.error = error;
 
-        for (Promise<E, B, ?> callback: followUps) {
-            callback.onError(error);
-            callback.reject(error);
+        for (Promise<E, B, ?> next: followUps) {
+            next.error(error);
+            next.reject(error);
         }
 
         return true;
@@ -109,10 +141,10 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         if (this.status == RUNNING) {
             this.followUps.add(promise);
         } else if (this.status == FAILED) {
-            promise.onError(this.error);
+            promise.error(this.error);
         } else if (this.status == SUCCESS) {
             Resolvable<E, B>.Resolver<B> resolver = promise.getResolver();
-            promise.onReady(this.result, resolver);
+            promise.ready(this.result, resolver);
         }
 
         return promise;
@@ -132,7 +164,8 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         >() {
             @Override
             public void onReady(
-                ArrayList<E> inputs, Resolver<ArrayList<Pair<E, B>>> completer
+                ArrayList<E> inputs,
+                Resolver<ArrayList<Pair<E, B>>> completer
             ) {
                 ArrayList<Pair<E, B>> results = new ArrayList<>();
 
@@ -142,7 +175,9 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
 
                     promise.then(new Promise<B, E, Object>() {
                         @Override
-                        public void onReady(B result, Resolver<E> resolver) {
+                        public void onReady(
+                            B result, Resolver<E> resolver
+                        ) {
                             results.add(new Pair<E, B>(input, result));
                             if (results.size() == numPromises) {
                                 completer.resolve(results);
@@ -158,9 +193,7 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
             }
 
             @Override
-            public void onError(Throwable error) {
-
-            }
+            public void onError(Throwable error) { }
         };
     }
 }

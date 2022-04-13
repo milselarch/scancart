@@ -10,8 +10,10 @@ import androidx.fragment.app.FragmentManager;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.nfc.NdefMessage;
@@ -37,6 +39,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -46,6 +50,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Shop extends Fragment {
     private NfcAdapter mNfcAdapter;
@@ -63,7 +68,9 @@ public class Shop extends Fragment {
         LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState
     ) {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        AppCompatDelegate.setDefaultNightMode(
+            AppCompatDelegate.MODE_NIGHT_NO
+        );
         return inflater.inflate(
             R.layout.nfc_scan, container, false
         );
@@ -79,28 +86,34 @@ public class Shop extends Fragment {
         loadUI();
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        context = getContext();
-
+    void loadUser() {
         if (!account.isLoggedIn()) {
             Activity activity = getActivity();
             if (activity == null) { return; }
             account.logout(activity.getApplicationContext());
             firebaseAuth.signOut();
             startActivity(new Intent(
-                    activity, MainActivity.class
+                activity, MainActivity.class
             ));
         } else {
             userID = account.getUserID();
         }
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        context = getContext();
+        this.loadUser();
+
+        // String name = firebaseAuth.getCurrentUser();
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (mNfcAdapter == null) {
             // Stop here, we definitely need NFC
             Toast.makeText(
-                this.getContext(), "This device doesn't support NFC.",
+                this.getContext(),
+                "This device doesn't support NFC.",
                 Toast.LENGTH_LONG
             ).show();
             return;
@@ -331,6 +344,7 @@ public class Shop extends Fragment {
         tagIdView.setText(tagID);
 
         if (documentData == null) {
+            Log.d("DOC_DATA", "NULL");
             scanTitleView.setText(R.string.unknown_item);
             caloriesTextInfo.setText(R.string.na);
             itemImageView.setImageResource(R.drawable.shopping_cart);
@@ -348,6 +362,19 @@ public class Shop extends Fragment {
         Double price = parseDouble(documentData.get("price"));
         String displayName = (String) documentData.get("display_name");
         String imageUrl = (String) documentData.get("image_url");
+        boolean diabeticWarning = false;
+
+        try {
+            diabeticWarning = (boolean) documentData.get(
+                "diabetic_warning"
+            );
+        } catch (NullPointerException e) {
+            Toast.makeText(
+                getContext(),
+                "diabetic warning data not found",
+                Toast.LENGTH_SHORT
+            ).show();
+        }
 
         assert calories != null;
         assert carbs != null;
@@ -362,12 +389,64 @@ public class Shop extends Fragment {
         fatsTextInfo.setText(fats.toString() + "g");
         priceTextInfo.setText("$" + price.toString());
 
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference userData = db
+            .collection("users")
+            .document(Objects.requireNonNull(firebaseAuth.getUid()));
+
+        final boolean warning = diabeticWarning;
+        userData.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    Log.d("DOC_DATA_ACCT", String.valueOf(account.getUserID()));
+
+                    if (document.exists()) {
+                        Map<String, Object> userDetails = document.getData();
+                        if (userDetails == null) {
+                            Log.d("USER_DETAILS", "NULL");
+                            return;
+                        }
+
+                        Object rawCondition = userDetails.get("userHealthConditions");
+                        if (rawCondition == null) {
+                            Log.d("USER_DETAILS", "NO_COND");
+                            return;
+                        }
+
+                        String condition = rawCondition.toString();
+                        Log.d("USER_DETAILS", condition);
+                        Log.d("USER_DETAILS_BOOL", String.valueOf(warning));
+
+                        if (warning && condition.equals("Diabetes")) {
+                            Log.d("USER_DETAILS", "HAS_DIABETES");
+                            issueDiabeticWarning(condition);
+                        }
+                    }
+                }
+            }
+        });
+
         new DownloadImageTask(new DownloadImageTask.customListener() {
             @Override
             public void postExecute(Bitmap result) {
                 itemImageView.setImageBitmap(result);
             }
         }).execute(imageUrl);
+    }
+
+    private void issueDiabeticWarning (String healthCondition){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Health Warning");
+        builder.setMessage("This item has high sugar content and is not recommended for the following health conditions: " + healthCondition);
+        builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.show();
     }
 
     public static Double parseDouble(Object number) {
