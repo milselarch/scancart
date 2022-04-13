@@ -171,7 +171,7 @@ public class FirebaseHandler {
                     Map<String, Object>, ShoppingCartItemModel, Object
                 >() {
                     @Override
-                    void onPromiseReady(
+                    public void onReady(
                         Map<String, Object> result,
                         Resolver<ShoppingCartItemModel> resolver
                     ) {
@@ -196,7 +196,7 @@ public class FirebaseHandler {
             Void
         > (true) {
             @Override
-            void onPromiseReady(
+            public void onReady(
                 ArrayList<Map<String, Object>> result,
                 Resolver<
                     ArrayList<Promise<

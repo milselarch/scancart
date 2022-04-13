@@ -51,7 +51,7 @@ abstract class Resolvable<T, E> {
 
 public abstract class Promise<T, E, B> extends Resolvable<T, E> {
     protected E result;
-    protected ArrayList<Promise<E, B, ?>> followUps;
+    final protected ArrayList<Promise<E, B, ?>> followUps = new ArrayList<>();
 
     Promise() {
         this(false);
@@ -63,12 +63,7 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
         }
     }
 
-    @Override
-    public void onReady(T result, Resolver<E> resolver) {
-        this.onPromiseReady(result, resolver);
-    };
-
-    abstract void onPromiseReady(T result, Resolver<E> resolver);
+    abstract public void onReady(T result, Resolver<E> resolver);
     abstract public void onError(Throwable error);
 
     @Override
@@ -136,7 +131,7 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
             ArrayList<E>, ArrayList<Pair<E, B>>, Object
         >() {
             @Override
-            void onPromiseReady(
+            public void onReady(
                 ArrayList<E> inputs, Resolver<ArrayList<Pair<E, B>>> completer
             ) {
                 ArrayList<Pair<E, B>> results = new ArrayList<>();
@@ -147,7 +142,7 @@ public abstract class Promise<T, E, B> extends Resolvable<T, E> {
 
                     promise.then(new Promise<B, E, Object>() {
                         @Override
-                        void onPromiseReady(B result, Resolver<E> resolver) {
+                        public void onReady(B result, Resolver<E> resolver) {
                             results.add(new Pair<E, B>(input, result));
                             if (results.size() == numPromises) {
                                 completer.resolve(results);
