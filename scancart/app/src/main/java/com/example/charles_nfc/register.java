@@ -127,7 +127,7 @@ public class register extends AppCompatActivity {
         b2Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(register.this, Shop.class));
+                loadFragmentActivity(R.id.profile);
             }
         });
     }
@@ -146,8 +146,15 @@ public class register extends AppCompatActivity {
             this, "successfully registered user",
             Toast.LENGTH_SHORT
         ).show();
-        startActivity(new Intent(
-            register.this, Profile.class
-        ));
+        loadFragmentActivity(R.id.profile);
+    }
+
+    void loadFragmentActivity(int fragmentID) {
+        Intent main_intent = new Intent(
+            register.this, FragmentActivity.class
+        );
+        // tell fragment activity we want to go to cart fragment
+        main_intent.putExtra("fragment_id", fragmentID);
+        startActivity(main_intent);
     }
 }
