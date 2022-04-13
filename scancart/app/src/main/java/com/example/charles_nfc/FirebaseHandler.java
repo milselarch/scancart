@@ -135,7 +135,7 @@ public class FirebaseHandler {
     public static void editUser(
         User user, FirebaseFirestore fStore, FireCallback onEditComplete
     ) {
-        Log.d(TAG, "" + user.getUserUID());
+        Log.d("EDIT_USER", "" + user.getUserUID());
         DocumentReference documentReference = fStore.collection("users").document(user.getUserUID());
         documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override

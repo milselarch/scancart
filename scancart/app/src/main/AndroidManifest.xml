@@ -29,7 +29,7 @@
             android:name=".EditProfile"
             android:exported="false" />
         <activity
-            android:name=".ProfileActivity"
+            android:name=".Profile"
             android:exported="false" />
         <activity
             android:name=".register"

@@ -18,6 +18,7 @@ public class FragmentActivity extends AppCompatActivity {
     BottomNavigationView bottomNavigationView;
     Shop shop = new Shop();
     com.example.charles_nfc.Profile profile = new com.example.charles_nfc.Profile();
+    private final UserAccount account = UserAccount.getAccount();
     Delivery delivery = new Delivery();
     Cart cart = new Cart();
 
@@ -44,6 +45,7 @@ public class FragmentActivity extends AppCompatActivity {
 
     protected boolean selectFragment(int itemID) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        Log.d("USER_ID", String.valueOf(account.getUserID()));
 
         switch (itemID) {
             case R.id.shop:

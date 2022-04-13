@@ -147,7 +147,7 @@ public class register extends AppCompatActivity {
             Toast.LENGTH_SHORT
         ).show();
         startActivity(new Intent(
-            register.this, ProfileActivity.class
+            register.this, Profile.class
         ));
     }
 }

@@ -274,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     //failed Signin in
                     pd.dismiss();
                     Toast.makeText(MainActivity.this, "" +e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.d("LOGOUT", "MAIN_LOAD_FAILED");
                     account.logout(context);
                     assert !account.isLoggedIn();
                 }

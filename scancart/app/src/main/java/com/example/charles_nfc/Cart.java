@@ -39,7 +39,6 @@ public class Cart extends Fragment {
     RecyclerView mRecyclerView;
     Button checkoutButton;
     TextView cart_total;
-
     String cost_string;
 
     //TODO: Remove this eventually
