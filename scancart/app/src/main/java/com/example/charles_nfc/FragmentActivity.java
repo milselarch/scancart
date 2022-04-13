@@ -13,18 +13,35 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class FragmentActivity extends AppCompatActivity {
     BottomNavigationView bottomNavigationView;
     Shop shop = new Shop();
     com.example.charles_nfc.Profile profile = new com.example.charles_nfc.Profile();
     private final UserAccount account = UserAccount.getAccount();
+    private Integer userID;
+
+    FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
     Delivery delivery = new Delivery();
     Cart cart = new Cart();
+
+    void checkLogin() {
+        if (!account.isLoggedIn()) {
+            account.logout(getApplicationContext());
+            firebaseAuth.signOut();
+            startActivity(new Intent(
+                FragmentActivity.this, MainActivity.class
+            ));
+        } else {
+            userID = account.getUserID();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.fragment_holder);
         Log.d("ACCOUNT_CC", String.valueOf(account.getUserID()));
 

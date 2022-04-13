@@ -26,7 +26,7 @@
     <string name="shopping_cart">Cart Items</string>
     <string name="proceed_to_checkout">Checkout</string>
     //Checkout
-    <string name="check_out_title">Delivery Information</string>
+    <string name="check_out_title">Delivery Info</string>
     <string name="edit_address">Edit Address</string>
     <string name="checkout">Checkout</string>
     <string name="address">Edit Address</string>
@@ -35,7 +35,7 @@
     <string name="select_time">Select Time</string>
     <string name="place_order">Place Order</string>
     <string name="return_shopping_cart">Return to Shopping Cart</string>
-    <string name="return_checkout">Return to Checkout Page</string>
+    <string name="return_checkout">Return to Checkout</string>
     <string name="confirm_address">Confirm Address</string>
     <string name="checkout_label">Checkout</string>
     <string name="select_timing_label">Checkout</string>

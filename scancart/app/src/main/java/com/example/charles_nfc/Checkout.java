@@ -1,9 +1,13 @@
 package com.example.charles_nfc;
 
+import static com.example.charles_nfc.FirebaseHandler.fStore;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,13 +15,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.math.BigDecimal;
@@ -26,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class Checkout extends AppCompatActivity {
     Button select_date_and_time, edit_address, return_shopping_cart,place_order;
@@ -35,8 +44,10 @@ public class Checkout extends AppCompatActivity {
     List<Map> shopping_cart_array;
     double total_cost;
 
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
     final int REQUEST_CODE_DATETIME = 1000;
     private static final String TAG = "Checkout";
+    private String address = "";
 
     FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
     private final UserAccount account = UserAccount.getAccount();
@@ -51,30 +62,51 @@ public class Checkout extends AppCompatActivity {
         startActivity(main_intent);
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.checkout);
-        Intent intent = getIntent();
-
+    boolean checkLogin () {
         if (!account.isLoggedIn()) {
             account.logout(getApplicationContext());
             firebaseAuth.signOut();
             startActivity(new Intent(
                 Checkout.this, MainActivity.class
             ));
+            return false;
         } else {
             userID = account.getUserID();
+            return true;
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.checkout);
+        Intent intent = getIntent();
+
+        if (!checkLogin()) { return; }
 
         text_address = findViewById(R.id.address);
         text_date = findViewById(R.id.date);
         text_time= findViewById(R.id.time);
 
         select_date_and_time = findViewById(R.id.select_date_and_time);
-        edit_address = findViewById(R.id.editAddress);
         return_shopping_cart = findViewById(R.id.return_shopping_cart);
         place_order = findViewById(R.id.place_order);
+
+        String FireauthUUID = firebaseAuth.getUid();
+        CompletableFuture<DocumentSnapshot> promise = null;
+        try {
+            promise = firebaseManager.loadUserInfo(FireauthUUID);
+            promise.thenAccept(user -> {
+                if (!user.exists()) { return; }
+                Map<String, Object> data = user.getData();
+                if (data == null) { return; }
+                address = (String) data.get("userStreetAddress");
+                text_address.setText(address);
+            });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Return to Shopping Cart
         return_shopping_cart.setOnClickListener(new View.OnClickListener() {
@@ -84,10 +116,11 @@ public class Checkout extends AppCompatActivity {
             }
         });
 
-        text_address.setText("Address:");
-        text_date.setText("Delivery Date: -");
-        text_time.setText("Delivery Time: -");
+        // text_address.setText("Address:");
+        // text_date.setText("Delivery Date: -");
+        // text_time.setText("Delivery Time: -");
 
+        /*
         // Edit Address
         edit_address.setOnClickListener((new View.OnClickListener() {
             @Override
@@ -95,12 +128,15 @@ public class Checkout extends AppCompatActivity {
                 //startActivity(new Intent(Checkout.this,EditAddress.class));
             }
         }));
+        */
 
         // Select Date and Time
         select_date_and_time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent datetime_intent = new Intent(Checkout.this, SelectTiming.class);
+                Intent datetime_intent = new Intent(
+                    Checkout.this, SelectTiming.class
+                );
                 startActivityForResult(datetime_intent,1000);
             }
         });
@@ -109,7 +145,6 @@ public class Checkout extends AppCompatActivity {
         place_order.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (str_date == null && str_time == null) {
                     Toast.makeText(
                         getApplicationContext(),
@@ -130,8 +165,8 @@ public class Checkout extends AppCompatActivity {
                     };
 
                     FirebaseCheckOut(
-                        str_date, str_time, shopping_cart_array, userID, orderID, total_cost,
-                        callback
+                        str_date, str_time, shopping_cart_array, userID,
+                        orderID, total_cost, address, callback
                     );
                 }
 
@@ -183,8 +218,8 @@ public class Checkout extends AppCompatActivity {
             if (resultCode == Activity.RESULT_OK) {
                 str_date = data.getStringExtra(SelectTiming.date_key);
                 str_time = data.getStringExtra(SelectTiming.time_key);
-                text_date.setText("Delivery Date: " + str_date);
-                text_time.setText("Delivery Time: " + str_time);
+                text_date.setText(str_date);
+                text_time.setText(str_time);
             }
         }
     }
@@ -196,6 +231,7 @@ public class Checkout extends AppCompatActivity {
         int userID,
         String orderID,
         double total_cost,
+        String address,
         FirebaseHandler.FireCallback callback
     ) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -209,6 +245,7 @@ public class Checkout extends AppCompatActivity {
         docData.put("user_id", userID);
         docData.put("order_id", orderID);
         docData.put("total_cost", total_cost);
+        docData.put("address", address);
 
         cart.add(docData)
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
