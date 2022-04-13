@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,46 +8,85 @@
     android:orientation="vertical"
     android:layout_marginLeft="10dp"
     android:layout_marginRight="10dp"
-    android:layout_marginTop="25dp"
-    android:layout_marginBottom="25dp"
+    android:rowCount="4"
+    android:layout_column="1"
     >
 
+    <!--
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/shopping_cart"
         android:textSize="35sp"
-        android:textStyle="bold"
-        android:textColor="#72CCBC"
         android:gravity="center"
         />
+    -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/shopping_cart_items"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="00dp"
         android:scrollbars="vertical"
+        android:layout_row="0"
+        android:layout_rowSpan="3"
+        android:layout_column="1"
         />
 
-    <TextView
-        android:id="@+id/cart_total"
-        android:layout_width="match_parent"
+    <GridLayout
+        android:layout_row="2"
+        android:layout_column="1"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:textSize="25sp"
-        android:textStyle="bold" />
-
-    <Button
-        android:id="@+id/checkoutbtn"
-        android:text="@string/proceed_to_checkout"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:textSize="25dp"
-        android:background="@drawable/rounded_teal_button"
-        android:textColor="@color/white" />
+        android:rowCount="1"
+        android:columnCount="1"
+        >
+        <ImageView
+            android:id="@+id/cart_footer"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:layout_gravity="fill"
+            android:background="@color/white"
+            android:alpha="0.9"
+            />
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_gravity="bottom|center"
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:padding="20dp"
+            android:backgroundTint="@color/white"
+            android:layout_row="0"
+            android:layout_column="0"
+            >
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/checkoutbtn"
+                android:text="@string/proceed_to_checkout"
+                android:layout_width="match_parent"
+                android:insetLeft="100dp"
+                android:insetRight="100dp"
+                android:layout_gravity="bottom"
+                android:layout_height="60dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="15sp"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/cart_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_gravity="center"
+                android:textSize="25sp"
+                />
+        </LinearLayout>
+    </GridLayout>
+
+
+</GridLayout>

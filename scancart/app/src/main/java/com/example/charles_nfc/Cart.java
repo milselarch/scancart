@@ -4,13 +4,16 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.util.Log;
 import android.widget.Toast;
@@ -65,10 +68,21 @@ public class Cart extends Fragment {
         );
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     protected void loadItems() {
         super.onStart();
         View currentView = getView();
         if (currentView == null) { return; }
+
+        ImageView footerView = currentView.findViewById(R.id.cart_footer);
+        footerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // prevent buttons below footer from being clicked
+                // by not propagating click event downwards
+                return true;
+            }
+        });
 
         mRecyclerView = currentView.findViewById(R.id.shopping_cart_items);
         checkoutButton = currentView.findViewById(R.id.checkoutbtn);
@@ -110,7 +124,7 @@ public class Cart extends Fragment {
                             context, RecyclerView.VERTICAL, false
                         ));
 
-                        cost_string = "Total Cost: $ " + String.format("%.2f", calculate_total_cost(shopping_cart));
+                        cost_string = "$ " + String.format("%.2f", calculate_total_cost(shopping_cart));
                         cart_total.setText(cost_string);
                     }
 
@@ -153,7 +167,7 @@ public class Cart extends Fragment {
                                         context, RecyclerView.VERTICAL, false
                                     ));
 
-                                    cost_string = "Total Cost: $ " + String.format("%.2f",calculate_total_cost(shopping_cart));
+                                    cost_string = "$ " + String.format("%.2f",calculate_total_cost(shopping_cart));
                                     cart_total.setText(cost_string);
                                     Log.d("FIREBASE DEL", shopping_cart.toString());
                                 }
@@ -174,7 +188,7 @@ public class Cart extends Fragment {
                         Toast.LENGTH_SHORT
                     ).show();
                 } else {
-                    //navigate to checkout
+                    // navigate to checkout
                     Intent intent = new Intent(getActivity(), Checkout.class);
                     intent.putParcelableArrayListExtra("shopping_cart", shopping_cart);
                     startActivity(intent);

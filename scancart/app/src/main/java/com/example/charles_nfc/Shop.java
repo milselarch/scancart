@@ -51,6 +51,7 @@ public class Shop extends Fragment {
     private PendingIntent mPendingIntent;
     private Map<String, Object> itemDocument;
     private final Integer userID = 1;
+    private String tagID;
     Context context;
 
     @Override
@@ -67,6 +68,10 @@ public class Shop extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        if (this.tagID != null) {
+            // restore previously scanned item to layout
+            updateItem(this.tagID, this.itemDocument);
+        }
         loadUI();
     }
 
@@ -290,6 +295,8 @@ public class Shop extends Fragment {
     @SuppressLint("SetTextI18n")
     protected void updateItem(String tagID, Map<String, Object> documentData) {
         this.itemDocument = documentData;
+        this.tagID = tagID;
+
         View currenView = getView();
         if (currenView == null) { return; }
 

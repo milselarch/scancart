@@ -2,11 +2,14 @@ package com.example.charles_nfc;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
@@ -30,23 +33,38 @@ public class FragmentActivity extends AppCompatActivity {
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.shop:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, shop).commit();
-                        return true;
-                    case R.id.cart:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, cart).commit();
-                        return true;
-                    case R.id.delivery:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, delivery).commit();
-                        return true;
-                    case R.id.profile:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, profile).commit();
-                        return true;
-                }
-                return false;
+                int itemID = item.getItemId();
+                return selectFragment(itemID);
             }
         });
+
+        Intent callingIntent = getIntent();
+        handleCallingIntent(callingIntent);
+    }
+
+    protected boolean selectFragment(int itemID) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        switch (itemID) {
+            case R.id.shop:
+                transaction.replace(R.id.container, shop).commit();
+                bottomNavigationView.getMenu().getItem(0).setChecked(true);
+                return true;
+            case R.id.cart:
+                transaction.replace(R.id.container, cart).commit();
+                bottomNavigationView.getMenu().getItem(1).setChecked(true);
+                return true;
+            case R.id.delivery:
+                transaction.replace(R.id.container, delivery).commit();
+                bottomNavigationView.getMenu().getItem(2).setChecked(true);
+                return true;
+            case R.id.profile:
+                transaction.replace(R.id.container, profile).commit();
+                bottomNavigationView.getMenu().getItem(3).setChecked(true);
+                return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -55,4 +73,14 @@ public class FragmentActivity extends AppCompatActivity {
         shop.onNewIntent(intent);
     }
 
+    protected void handleCallingIntent(Intent callingIntent) {
+        if (callingIntent == null) { return; }
+        int fragmentID = callingIntent.getIntExtra(
+            "fragment_id", -1
+        );
+
+        boolean result = this.selectFragment(fragmentID);
+        Log.d("RESTORE_FRAGMENT", String.valueOf(result));
+        Log.d("RESTORE_FRAGMENT", String.valueOf(fragmentID));
+    }
 }

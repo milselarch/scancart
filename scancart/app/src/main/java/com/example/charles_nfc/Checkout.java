@@ -40,6 +40,15 @@ public class Checkout extends AppCompatActivity {
     //TODO: Remove this eventually
     private final Integer userID = 1;
 
+    void loadFragmentActivity(int fragmentID) {
+        Intent main_intent = new Intent(
+            Checkout.this, FragmentActivity.class
+        );
+        // tell fragment activity we want to go to cart fragment
+        main_intent.putExtra("fragment_id", fragmentID);
+        startActivity(main_intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +68,7 @@ public class Checkout extends AppCompatActivity {
         return_shopping_cart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent main_intent = new Intent(Checkout.this, Cart.class);
-                startActivity(main_intent);
+                loadFragmentActivity(R.id.cart);
             }
         });
 
@@ -105,9 +113,7 @@ public class Checkout extends AppCompatActivity {
                     FirebaseHandler.FireCallback callback = new FirebaseHandler.FireCallback() {
                         @Override
                         public void callback(Object result) {
-                            //Todo Intent to delivery page?
-                            Intent main_intent = new Intent(Checkout.this, Cart.class);
-                            startActivity(main_intent);
+                            loadFragmentActivity(R.id.delivery);
                         }
                     };
 

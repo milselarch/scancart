@@ -23,8 +23,8 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
 
-    <string name="shopping_cart">Shopping Cart</string>
-    <string name="proceed_to_checkout">Proceed to Checkout</string>
+    <string name="shopping_cart">Cart Items</string>
+    <string name="proceed_to_checkout">Checkout</string>
     //Checkout
     <string name="check_out_title">Delivery Information</string>
     <string name="edit_address">Edit Address</string>
