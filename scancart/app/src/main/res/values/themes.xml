@@ -18,9 +18,10 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="Theme.Charles_nfc.NoActionBar">
+    <style name="Theme.Charles_nfc.NoActionBar" parent="Theme.Charles_nfc">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
     </style>
 
     <style name="Theme.Charles_nfc.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
