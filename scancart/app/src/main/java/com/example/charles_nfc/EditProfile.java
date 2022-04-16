@@ -66,6 +66,7 @@ public class EditProfile extends AppCompatActivity {
         //Buttons
         Confirm = findViewById(R.id.confirmDetails);
         b2Login = findViewById(R.id.editB2login);
+
         //Spinner Handler
         healthConditionsChoice = (Spinner) findViewById(R.id.healthConditions);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.health_conditions, android.R.layout.simple_spinner_item);
@@ -106,8 +107,8 @@ public class EditProfile extends AppCompatActivity {
                     long userID = (long) account.getUserID();
                     Log.d("LOADED_ID", String.valueOf(userID));
                     FirebaseHandler.User user = new FirebaseHandler().new User(
-                        UID, Name, phoneNumber, streetAddress, postalCode,
-                        floorAndUnit, spinnerChoice, userID
+                            UID, Name, phoneNumber, streetAddress, postalCode,
+                            floorAndUnit, spinnerChoice, userID
                     );
 
                     FirebaseHandler.editUser(user, fStore, (Object editResult) -> {
@@ -122,21 +123,21 @@ public class EditProfile extends AppCompatActivity {
                     @Override
                     public void callback(Object result) {
                         if (
-                            (result instanceof Exception) ||
-                            ((int) result == -1)
+                                (result instanceof Exception) ||
+                                        ((int) result == -1)
                         ) {
                             Toast.makeText(
-                                EditProfile.this,
-                                "failed to acquire user id",
-                                Toast.LENGTH_SHORT
+                                    EditProfile.this,
+                                    "failed to acquire user id",
+                                    Toast.LENGTH_SHORT
                             ).show();
                             return;
                         }
 
                         long userID = (long) (int) result;
                         FirebaseHandler.User user = new FirebaseHandler().new User(
-                            UID, Name, phoneNumber, streetAddress, postalCode,
-                            floorAndUnit, spinnerChoice, userID
+                                UID, Name, phoneNumber, streetAddress, postalCode,
+                                floorAndUnit, spinnerChoice, userID
                         );
 
                         FirebaseHandler.editUser(user, fStore, (Object editResult) -> {
@@ -165,14 +166,14 @@ public class EditProfile extends AppCompatActivity {
             account.logout(getApplicationContext());
             firebaseAuth.signOut();
 
-            Log.e("LOGOUT", "UID NOT FOUND");
+            Log.e("LOGOUT", "UUID NOT FOUND");
             Toast.makeText(
-                this, "Failed to load profile",
-                Toast.LENGTH_SHORT
+                    this, "Failed to load profile",
+                    Toast.LENGTH_SHORT
             ).show();
 
             startActivity(new Intent(
-                EditProfile.this, MainActivity.class
+                    EditProfile.this, MainActivity.class
             ));
             finish();
             return;
@@ -191,7 +192,7 @@ public class EditProfile extends AppCompatActivity {
 
     void loadFragmentActivity(int fragmentID) {
         Intent main_intent = new Intent(
-            EditProfile.this, FragmentActivity.class
+                EditProfile.this, FragmentActivity.class
         );
         // tell fragment activity we want to go to cart fragment
         main_intent.putExtra("fragment_id", fragmentID);
@@ -201,13 +202,15 @@ public class EditProfile extends AppCompatActivity {
     void onUserEdited(boolean success, int userID) {
         Log.d("USER_EDIT_END", String.valueOf(userID));
 
+        //If Profile fails to update
         if (!success) {
             Toast.makeText(
-                this, "failed to edit user",
-                Toast.LENGTH_SHORT
+                    this, "User Profile Failed to Update.",
+                    Toast.LENGTH_SHORT
             ).show();
         };
 
+        //If Profile is successfully updated
         assert userID != -1;
         account.saveUserID(getApplicationContext(), userID);
         assert account.isLoggedIn();
@@ -217,8 +220,8 @@ public class EditProfile extends AppCompatActivity {
         assert account.getUserID() == userID;
 
         Toast.makeText(
-            this, "successfully edited user",
-            Toast.LENGTH_SHORT
+                this, "User Profile Successfully Updated.",
+                Toast.LENGTH_SHORT
         ).show();
 
         Log.d("EDIT_END", "GO MAIN PROFILE");

@@ -177,7 +177,7 @@ public class Shop extends Fragment {
         Log.d("CART_ADD", itemDocument.toString());
 
         assert itemDocument != null;
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseHandler.getInstanceDatabase();
         CollectionReference cart = db.collection("shopping_cart");
         String tagID = (String) itemDocument.get("tag_id");
         Query query = cart
@@ -296,7 +296,7 @@ public class Shop extends Fragment {
         TextView ScanID = currentView.findViewById(R.id.scan_nfc_id);
         ScanID.setText(nfc_content);
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseHandler.getInstanceDatabase();;
         CollectionReference inventory = db.collection(
             "inventory"
         );
@@ -389,7 +389,7 @@ public class Shop extends Fragment {
         fatsTextInfo.setText(fats.toString() + "g");
         priceTextInfo.setText("$" + price.toString());
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseHandler.getInstanceDatabase();
         DocumentReference userData = db
             .collection("users")
             .document(Objects.requireNonNull(firebaseAuth.getUid()));

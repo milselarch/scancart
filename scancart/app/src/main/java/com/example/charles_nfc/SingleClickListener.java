@@ -3,6 +3,8 @@ package com.example.charles_nfc;
 import android.os.SystemClock;
 import android.view.View;
 
+//Overriding OnClickListener to only allow click event every 1 second
+//Since Firebase Firestore incremental and decremental calls are limited at once per second
 public class SingleClickListener implements View.OnClickListener {
 
     int defaultInterval;

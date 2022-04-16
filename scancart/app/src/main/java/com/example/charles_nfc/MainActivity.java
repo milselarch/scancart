@@ -26,8 +26,6 @@ import com.google.firebase.auth.PhoneAuthProvider;
 
 import java.util.concurrent.TimeUnit;
 
-//TODO: Find a way to input user data into Firestore
-//TODO: Maybe find a way to authenticate the number first before OTP (Check firestore query first?)
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     UserAccount account;
@@ -67,16 +65,6 @@ public class MainActivity extends AppCompatActivity {
             startFragmentActivity();
         }
 
-        /*
-        binding.register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(
-                    MainActivity.this, RegisterActivity.class
-                ));
-            }
-        });
-        */
 
         Callbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override

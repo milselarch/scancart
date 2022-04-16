@@ -44,7 +44,7 @@ public class Delivery extends Fragment {
             account.logout(activity.getApplicationContext());
             firebaseAuth.signOut();
             startActivity(new Intent(
-                activity, MainActivity.class
+                    activity, MainActivity.class
             ));
         } else {
             userID = account.getUserID();
@@ -53,19 +53,19 @@ public class Delivery extends Fragment {
 
     @Override
     public View onCreateView(
-        LayoutInflater inflater, ViewGroup container,
-        Bundle savedInstanceState
+            LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState
     ) {
         super.onCreate(savedInstanceState);
         this.loadUser();
 
         orders = new ArrayList<Order>();
 
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseHandler.getInstanceDatabase();
         CollectionReference orders_completed = db.collection("completed_orders");
         int userID = account.getUserID();
         Query query = orders_completed.whereEqualTo(
-            "user_id", userID
+                "user_id", userID
         );
 
         query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -74,9 +74,9 @@ public class Delivery extends Fragment {
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (!task.isSuccessful()) {
                     Toast.makeText(
-                        getContext(),
-                        "Failed to load completed orders",
-                        Toast.LENGTH_SHORT
+                            getContext(),
+                            "Failed to load completed orders",
+                            Toast.LENGTH_SHORT
                     ).show();
                 }
 
@@ -111,7 +111,7 @@ public class Delivery extends Fragment {
                         Log.d("ORDER_DATE", order.delivery_date);
 
                         Intent intent = new Intent(
-                            getActivity(), GroceryList.class
+                                getActivity(), GroceryList.class
                         );
 
                         intent.putExtra("order_id", order_id );
@@ -122,7 +122,7 @@ public class Delivery extends Fragment {
         });
 
         return inflater.inflate(
-            R.layout.fragment_delivery, container, false
+                R.layout.fragment_delivery, container, false
         );
     }
 }

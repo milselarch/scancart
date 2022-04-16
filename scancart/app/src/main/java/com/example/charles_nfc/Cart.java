@@ -20,12 +20,9 @@ import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -42,6 +39,7 @@ public class Cart extends Fragment {
     Button checkoutButton;
     TextView cart_total;
     String cost_string;
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
 
     private static final String TAG = "ShoppingCart";
     FirebaseAuth firebaseAuth = FirebaseHandler.getInstanceAuth();
@@ -75,13 +73,13 @@ public class Cart extends Fragment {
 
     @Override
     public View onCreateView(
-        LayoutInflater inflater, ViewGroup container,
-        Bundle savedInstanceState
+            LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState
     ) {
         Log.d("FRAGMENT_CREATE", "cart");
 
         return inflater.inflate(
-            R.layout.shopping_cart_main, container, false
+                R.layout.shopping_cart_main, container, false
         );
     }
 
@@ -108,108 +106,109 @@ public class Cart extends Fragment {
 
         shopping_cart.clear();
         ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
-            shopping_cart, userID
+                shopping_cart, userID
         );
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(
-            this.getContext(), RecyclerView.VERTICAL, false
+                this.getContext(), RecyclerView.VERTICAL, false
         ));
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseHandler.getInstanceDatabase();
         Context context = getContext();
 
+        //Retrieve items in shopping cart from firebase
         db.collection("shopping_cart")
-            .whereEqualTo("user_id", userID)
-            .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(
-                    @Nullable QuerySnapshot value,
-                    @Nullable FirebaseFirestoreException e
-                ) {
-                    if (e != null) {
-                        Log.w(TAG, "Failed to read shopping cart.", e);
-                        Toast.makeText(
-                            context,
-                            "Unable to retrieve items in shopping cart.",
-                            Toast.LENGTH_SHORT
-                        ).show();
-                        return;
-                    }
+                .whereEqualTo("user_id", userID)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(
+                            @Nullable QuerySnapshot value,
+                            @Nullable FirebaseFirestoreException e
+                    ) {
+                        if (e != null) {
+                            Log.w(TAG, "Failed to read shopping cart.", e);
+                            Toast.makeText(
+                                    context,
+                                    "Unable to retrieve items in shopping cart.",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
 
-                    shopping_cart = new ArrayList<>();
-                    if (value.isEmpty()) {
-                        ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
-                            shopping_cart, userID
-                        );
-                        mRecyclerView.setAdapter(adapter);
-                        mRecyclerView.setLayoutManager(new LinearLayoutManager(
-                            context, RecyclerView.VERTICAL, false
-                        ));
+                        shopping_cart = new ArrayList<>();
+                        if (value.isEmpty()) {
+                            ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
+                                    shopping_cart, userID
+                            );
+                            mRecyclerView.setAdapter(adapter);
+                            mRecyclerView.setLayoutManager(new LinearLayoutManager(
+                                    context, RecyclerView.VERTICAL, false
+                            ));
 
-                        cost_string = "$ " + String.format("%.2f", calculate_total_cost(shopping_cart));
-                        cart_total.setText(cost_string);
-                    }
+                            cost_string = "$ " + String.format("%.2f", calculate_total_cost(shopping_cart));
+                            cart_total.setText(cost_string);
+                        }
 
-                    for (QueryDocumentSnapshot doc : value) {
-                        Map<String, Object> docData = doc.getData();
-                        String tag_id = (String) docData.get("tag_id");
-                        long quantity = (long) docData.get("quantity");
+                        //Retrieve item's information in Inventory from Firebase
+                        for (QueryDocumentSnapshot doc : value) {
+                            Map<String, Object> docData = doc.getData();
+                            String tag_id = (String) docData.get("tag_id");
+                            long quantity = (long) docData.get("quantity");
 
-                        db.collection("inventory")
-                            .whereEqualTo("tag_id", tag_id)
-                            .get()
-                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        for (QueryDocumentSnapshot document : task.getResult()) {
-                                            Log.d(TAG, document.getId() + " => " + document.getData());
+                            db.collection("inventory")
+                                    .whereEqualTo("tag_id", tag_id)
+                                    .get()
+                                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                                    Log.d(TAG, document.getId() + " => " + document.getData());
 
-                                            Map<String, Object> documentData = document.getData();
-                                            String name = (String) documentData.get("display_name");
-                                            double cost = (double) documentData.get("price");
-                                            String image_url = (String) documentData.get("image_url");
+                                                    Map<String, Object> documentData = document.getData();
+                                                    String name = (String) documentData.get("display_name");
+                                                    double cost = (double) documentData.get("price");
+                                                    String image_url = (String) documentData.get("image_url");
 
-                                            shopping_cart.add(new ShoppingCartItemModel(tag_id, name, quantity, cost, image_url));
+                                                    shopping_cart.add(new ShoppingCartItemModel(tag_id, name, quantity, cost, image_url));
+                                                }
+                                            } else {
+                                                Log.w(TAG, "Failed to find item in Inventory", task.getException());
+                                                Toast.makeText(
+                                                        context,
+                                                        "Item in cart not found in Inventory",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+                                            }
+
+                                            ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
+                                                    shopping_cart, userID
+                                            );
+                                            adapter.sort();
+
+                                            mRecyclerView.setAdapter(adapter);
+                                            mRecyclerView.setLayoutManager(new LinearLayoutManager(
+                                                    context, RecyclerView.VERTICAL, false
+                                            ));
+
+                                            cost_string = "$ " + String.format("%.2f",calculate_total_cost(shopping_cart));
+                                            cart_total.setText(cost_string);
+                                            Log.d("FIREBASE DEL", shopping_cart.toString());
                                         }
-                                    } else {
-                                        Log.w(TAG, "Failed to find item in Inventory", task.getException());
-                                        Toast.makeText(
-                                            context,
-                                            "Item in cart not found in Inventory",
-                                            Toast.LENGTH_SHORT
-                                        ).show();
-                                    }
-
-                                    ShoppingCartAdapterClass adapter = new ShoppingCartAdapterClass(
-                                        shopping_cart, userID
-                                    );
-                                    adapter.sort();
-
-                                    mRecyclerView.setAdapter(adapter);
-                                    mRecyclerView.setLayoutManager(new LinearLayoutManager(
-                                        context, RecyclerView.VERTICAL, false
-                                    ));
-
-                                    cost_string = "$ " + String.format("%.2f",calculate_total_cost(shopping_cart));
-                                    cart_total.setText(cost_string);
-                                    Log.d("FIREBASE DEL", shopping_cart.toString());
-                                }
-                            }
-                        );
+                                    });
+                        }
                     }
-                }
-            }
-        );
+                });
 
         checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick (View v) {
                 if (shopping_cart.isEmpty()) {
+                    // safeguard to prevent user from checking out with no items
                     Toast.makeText(
-                        context,
-                        "There are no items in shopping cart!",
-                        Toast.LENGTH_SHORT
+                            context,
+                            "There are no items in shopping cart!",
+                            Toast.LENGTH_SHORT
                     ).show();
                 } else {
                     // navigate to checkout
@@ -230,17 +229,6 @@ public class Cart extends Fragment {
         savedInstanceState.putString("cost_string", cost_string);
         super.onSaveInstanceState(savedInstanceState);
     }
-
-    /*
-    // Restore shopping cart items from saved instance (during onStart)
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        // Call the superclass so it can restore the view hierarchy
-        Log.d("RESTORE", "test");
-        super.onRestoreInstanceState(savedInstanceState);
-        shopping_cart = (ArrayList<ShoppingCartItemModel>) savedInstanceState.<ShoppingCartItemModel>getParcelableArrayList("shopping_cart");
-        cost_string = savedInstanceState.getString("cost_string");
-    }
-    */
 
     // Calculate total cost of items in Shopping Cart
     public Double calculate_total_cost(ArrayList<ShoppingCartItemModel> cart) {

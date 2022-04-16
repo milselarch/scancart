@@ -37,7 +37,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class Checkout extends AppCompatActivity {
-    Button select_date_and_time, edit_address, return_shopping_cart,place_order;
+    Button select_date_and_time, return_shopping_cart,place_order;
     TextView text_address, text_date, text_time;
     String str_date, str_time, orderID;
     ArrayList<ShoppingCartItemModel> shopping_cart;
@@ -55,7 +55,7 @@ public class Checkout extends AppCompatActivity {
 
     void loadFragmentActivity(int fragmentID) {
         Intent main_intent = new Intent(
-            Checkout.this, FragmentActivity.class
+                Checkout.this, FragmentActivity.class
         );
         // tell fragment activity we want to go to cart fragment
         main_intent.putExtra("fragment_id", fragmentID);
@@ -67,7 +67,7 @@ public class Checkout extends AppCompatActivity {
             account.logout(getApplicationContext());
             firebaseAuth.signOut();
             startActivity(new Intent(
-                Checkout.this, MainActivity.class
+                    Checkout.this, MainActivity.class
             ));
             return false;
         } else {
@@ -108,7 +108,7 @@ public class Checkout extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Return to Shopping Cart
+        // 1. Return to Shopping Cart
         return_shopping_cart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,45 +116,31 @@ public class Checkout extends AppCompatActivity {
             }
         });
 
-        // text_address.setText("Address:");
-        // text_date.setText("Delivery Date: -");
-        // text_time.setText("Delivery Time: -");
-
-        /*
-        // Edit Address
-        edit_address.setOnClickListener((new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //startActivity(new Intent(Checkout.this,EditAddress.class));
-            }
-        }));
-        */
-
-        // Select Date and Time
+        // 2. Select Date and Time
         select_date_and_time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent datetime_intent = new Intent(
-                    Checkout.this, SelectTiming.class
+                        Checkout.this, SelectTiming.class
                 );
                 startActivityForResult(datetime_intent,1000);
             }
         });
 
-        // Place Order
+        // 3. Place Order
         place_order.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (str_date == null && str_time == null) {
                     Toast.makeText(
-                        getApplicationContext(),
-                        "Date and Time not selected",
-                        Toast.LENGTH_SHORT
+                            getApplicationContext(),
+                            "Date and Time not selected",
+                            Toast.LENGTH_SHORT
                     ).show();
                 } else {
                     total_cost = calculate_total_cost(shopping_cart);
                     orderID = String.valueOf(
-                        UUID.randomUUID().getLeastSignificantBits()
+                            UUID.randomUUID().getLeastSignificantBits()
                     );
 
                     FirebaseHandler.FireCallback callback = new FirebaseHandler.FireCallback() {
@@ -164,9 +150,9 @@ public class Checkout extends AppCompatActivity {
                         }
                     };
 
-                    FirebaseCheckOut(
-                        str_date, str_time, shopping_cart_array, userID,
-                        orderID, total_cost, address, callback
+                    firebaseManager.FirebaseCheckOut(
+                            str_date, str_time, shopping_cart_array, userID,
+                            orderID, total_cost, address, callback
                     );
                 }
 
@@ -188,6 +174,7 @@ public class Checkout extends AppCompatActivity {
         return total_cost.doubleValue();
     }
 
+    //Helper function to convert ArrayList to List<Map> object for firebase
     public List<Map> shopping_cart_firebase(ArrayList<ShoppingCartItemModel> cart) {
         List<Map> shopping_cart_list = new ArrayList<>();
         for (ShoppingCartItemModel item: cart) {
@@ -211,7 +198,7 @@ public class Checkout extends AppCompatActivity {
 
     @Override
     protected void onActivityResult (
-        int requestCode, int resultCode, Intent data
+            int requestCode, int resultCode, Intent data
     ) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_DATETIME) {
@@ -224,66 +211,5 @@ public class Checkout extends AppCompatActivity {
         }
     }
 
-    protected void FirebaseCheckOut(
-        String str_date,
-        String str_time,
-        List<Map> shopping_cart_array,
-        int userID,
-        String orderID,
-        double total_cost,
-        String address,
-        FirebaseHandler.FireCallback callback
-    ) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference cart = db.collection("completed_orders");
-
-        Map<String, Object> docData = new HashMap<>();
-        docData.put("delivery_date",str_date);
-        docData.put("delivery_time",str_time);
-        docData.put("delivery_status","Delivery in Progress");
-        docData.put("items", shopping_cart_array);
-        docData.put("user_id", userID);
-        docData.put("order_id", orderID);
-        docData.put("total_cost", total_cost);
-        docData.put("address", address);
-
-        cart.add(docData)
-            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                @Override
-                public void onSuccess(DocumentReference documentReference) {
-                    Log.e(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.e(TAG, "Error writing document", e);
-                }
-            });
-
-            Map<String,Object> checkOutList = new HashMap<>();
-
-            db.collection("shopping_cart")
-                .whereEqualTo("user_id", userID)
-                .get()
-                .addOnSuccessListener((querySnapshot) -> {
-                    WriteBatch batch = db.batch();
-                    for (DocumentSnapshot doc : querySnapshot) {
-                        batch.delete(doc.getReference());
-                    }
-
-                    batch.commit()
-                        .addOnSuccessListener((result) -> {
-                            Log.i(TAG, "All items have been removed.");
-                            callback.callback(null);
-                        })
-                        .addOnFailureListener((error) -> {
-                            Log.e(TAG, "Failed to remove all items.", error);
-                        });
-                })
-                .addOnFailureListener((error) -> {
-                    Log.e(TAG, "Failed to get your cart items.", error);
-                });
-    }
 }
 

@@ -28,7 +28,8 @@ public class GroceryList extends AppCompatActivity {
     GroceryAdapter groceryAdapter;
     Model.DataSource datasource;
     LinearLayoutManager llm;
-    FirebaseFirestore db;
+    List<Model.Grocery> groceries = new ArrayList<>();
+    private final FirebaseHandler firebaseManager = new FirebaseHandler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +39,6 @@ public class GroceryList extends AppCompatActivity {
     }
 
     public void loadUI() {
-        db = FirebaseFirestore.getInstance();
         Intent intent = this.getIntent();
 
         // disable auto dark mode across app
@@ -46,52 +46,24 @@ public class GroceryList extends AppCompatActivity {
         if (intent == null) { return; }
 
         String order_id = intent.getStringExtra("order_id");
-        CollectionReference orders_completed = db.collection("completed_orders");
-        //DocumentReference documentReference = orders_completed.document("order_id");
-        Query query = orders_completed.whereEqualTo("order_id", order_id);
-
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        FirebaseHandler.FireCallback callback = new FirebaseHandler.FireCallback() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                Log.d("ITEM_STATUS", String.valueOf(task.isSuccessful()));
-                onLoaded(task);
+            public void callback(Object result) {
+                if (result instanceof Integer && (int) result == -1 ) {
+                    Toast.makeText(
+                            GroceryList.this,
+                            "Failed to load completed orders",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+                groceries = (List) result;
+                onLoaded(groceries);
             }
-        });
+        };
+        firebaseManager.getCompletedOrder(order_id, callback);
     }
 
-    void onLoaded(Task<QuerySnapshot> task) {
-        if (!task.isSuccessful()) {
-            Toast.makeText(
-                GroceryList.this,
-                "Failed to load completed orders",
-                Toast.LENGTH_SHORT
-            ).show();
-        };
-
-        List<Model.Grocery> groceries = new ArrayList<>();
-        QuerySnapshot snapshot = task.getResult();
-        Log.d("SNAPSHOT", snapshot.toString());
-
-        for (DocumentSnapshot document: task.getResult()) {
-            List<Map> list = (List<Map>) document.get("items");
-            Log.d("LIST_VALUES", list.toString());
-            Log.d("DOC_DATA", document.toString());
-
-            for (Map item : list) {
-                Log.d("ADD_ITEM", item.toString());
-                String cost = String.valueOf(item.get("cost"));
-                String image_url = (String) item.get("image_url");
-                String name = (String) item.get("name");
-                String quantity = String.valueOf(item.get("quantity"));
-                String tag_id = (String) item.get("tag_id");
-
-                Log.d("TAG", String.valueOf(item));
-                groceries.add(new Model.Grocery(
-                    cost,image_url,name,quantity,tag_id
-                ));
-            }
-        }
-
+    void onLoaded(List groceries) {
         llm = new LinearLayoutManager(this);
         datasource = new Model.DataSource(groceries);
 
