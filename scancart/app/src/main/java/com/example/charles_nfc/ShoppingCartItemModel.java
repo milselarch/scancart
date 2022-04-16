@@ -69,4 +69,13 @@ public class ShoppingCartItemModel implements Parcelable {
         parcel.writeLong(quantity);
         parcel.writeDouble(cost);
     }
+
+    @Override
+    public boolean equals(Object other) {
+        ShoppingCartItemModel other_item = (ShoppingCartItemModel) other;
+        if (this.name.equals(other_item.name)) {
+            return true;
+        }
+        return false;
+    }
 }

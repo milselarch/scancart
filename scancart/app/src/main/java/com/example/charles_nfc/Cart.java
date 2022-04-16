@@ -170,7 +170,9 @@ public class Cart extends Fragment {
                                                     double cost = (double) documentData.get("price");
                                                     String image_url = (String) documentData.get("image_url");
 
-                                                    shopping_cart.add(new ShoppingCartItemModel(tag_id, name, quantity, cost, image_url));
+                                                    if (!shopping_cart.contains(new ShoppingCartItemModel(tag_id, name, quantity, cost, image_url))) {
+                                                        shopping_cart.add(new ShoppingCartItemModel(tag_id, name, quantity, cost, image_url));
+                                                    }
                                                 }
                                             } else {
                                                 Log.w(TAG, "Failed to find item in Inventory", task.getException());
