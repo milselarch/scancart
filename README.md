@@ -8,6 +8,8 @@ Tao Sihan (1005515)
 Lawrence Chen Qing Zhao (1005012)  
 Constance Chua Jie Ning (1005499)
 
+![poster](https://github.com/milselarch/scancart/blob/master/poster.png)
+
 ### Navigating the repo
 Our final 1D app is located under [scancart/app](https://github.com/milselarch/scancart/tree/master/scancart/app), while the subapps folder contains smaller subapps made by team members individually as they were working on their own individual assigned app features during the earlier phases of the development process (The plan was that we would each implement our own assigned features as a standalone app, then merge everything together to create our final app).  
 
@@ -23,4 +25,52 @@ User flow state transistion diagram of our app for reference ([] square brackets
 
 3. The login / registration page requires a phone number in the following format `+CCXXXXXXXX`, where `CC` is the country code (e.g. 65) and `XXXXXXXX` is the phone number. Note that there is [an issue with firebase's SMS authentication](https://stackoverflow.com/questions/46751766/this-app-is-not-authorized-to-use-firebase-authentication-please-verify-that-the) where running the app on a new device / android studio install will cause firebase to complain that the app is no authorized to use firebase authentication, and resolving this issue requires that we [use the current android studio's gradlew to generate a SHA signature](https://stackoverflow.com/a/62362112) that has to be added to our firestore database in order for firebase authentication to allow the app built by your current android studio install to use SMS authentication. To bypass this, we have two testing phone numbers (`+6591234567` with test OTP `000000`, and `+6598765432` with test OTP `123456`) that can be used in the login page, which should be able bypass needing to sign the app and adding it to firestore before being able to login via SMS to access the rest of the app.
 
-![poster](https://github.com/milselarch/scancart/blob/master/poster.png)
+### Description of Java classes in the app
+
+## MainActivity
+Firebase Phone SMS Authentication for User Sign-In process
+
+## FirebaseHandler
+Singleton instance of FirebaseFirestore, that is used by all other classes within the app to interact with the Firebase database. Firebase calls (User Registration, Removing items from Shopping Cart, Get Completed Orders etc.) are extracted to the FirebaseHandler to facilitate modularity and readability of code in other classes.
+
+## UserAccount
+Singleton instance managing the user ID that allows users to remain signed in using Shared Preference until the user choose to log out.
+
+## EditProfile
+Allows user to edit their Name, Phone Number, Street Address, Postal Code, Floor and Unit Number and Health Conditions.
+
+## Shop
+Near Field Communication Scanning of NFC Tags and decoding the payload into UTF-8 or UTF-16 format. Item is displayed with its nutritional information after it is successfully scanned and the payload decoded is used to query the Firebase database. Dialog Alert message is triggered if user has a health condition and scans an item that is not recommended for their health condition.
+
+## Cart
+Recycler View to show all items within the shopping cart of the user. Total cost of the items in the shopping cart is calculated and shown.
+
+## ShoppingCartItemModel
+Model for Shopping Cart Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Cart and Checkout class.
+
+## ShoppingCartAdapterClass
+Adapter class to manage the views in the Recycler View of Cart class. Items are sorted by alphabetical order and additional functionality such as modification of quantity and removal of item from shopping cart are included in this class.
+
+## Checkout
+Confirmation of order, delivery address and delivery timeslots. Once order is checked out, the shopping cart is cleared and the order can be reviewed under the Delivery tab.
+
+## SelectTiming
+Use of Android Widget DatePicker and TimePicker to select delivery date and time.
+
+## Delivery
+List View to show all delivery orders, sorted by chronological order based on delivery dates.
+
+## Order
+Model for Order Item with required attributes (Delivery Date, Delivery Status, Order ID). Orders are sorted by chronological order based on delivery dates.
+
+## OrderAdapter
+Adapter class to manage the views in the List View of Delivery clas.
+
+## GroceryList
+Recycler View to show all items within an order.
+
+## Model
+Static Nest Class for Grocery Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Grocery class.
+
+## GroceryAdapter
+Adapter class to manage the views in the Recycler View of GroceryList class.
