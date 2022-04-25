@@ -1,3 +1,5 @@
+#Scancart
+
 Scancart is an app that utilises the “tap-and-go” capability of Near Field Communication (NFC) in smartphones to allow elderly to obtain their groceries conveniently and monitor their nutritional intake based on their health profiles. Created for the 1D project of the 50.004 (information systems) module.
 
 Team 4-F members:  
@@ -28,7 +30,7 @@ User flow state transistion diagram of our app for reference ([] square brackets
 ### Description of Java classes in the app
 
 #### MainActivity
-Firebase Phone SMS Authentication for User Sign-In process
+Firebase Phone SMS Authentication for User Sign-In process.
 
 #### FirebaseHandler
 Singleton instance of FirebaseFirestore, that is used by all other classes within the app to interact with the Firebase database. Firebase calls (User Registration, Removing items from Shopping Cart, Get Completed Orders etc.) are extracted to the FirebaseHandler to facilitate modularity and readability of code in other classes.
