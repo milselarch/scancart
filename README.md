@@ -27,50 +27,50 @@ User flow state transistion diagram of our app for reference ([] square brackets
 
 ### Description of Java classes in the app
 
-## MainActivity
+#### MainActivity
 Firebase Phone SMS Authentication for User Sign-In process
 
-## FirebaseHandler
+#### FirebaseHandler
 Singleton instance of FirebaseFirestore, that is used by all other classes within the app to interact with the Firebase database. Firebase calls (User Registration, Removing items from Shopping Cart, Get Completed Orders etc.) are extracted to the FirebaseHandler to facilitate modularity and readability of code in other classes.
 
-## UserAccount
+#### UserAccount
 Singleton instance managing the user ID that allows users to remain signed in using Shared Preference until the user choose to log out.
 
-## EditProfile
+#### EditProfile
 Allows user to edit their Name, Phone Number, Street Address, Postal Code, Floor and Unit Number and Health Conditions.
 
-## Shop
+#### Shop
 Near Field Communication Scanning of NFC Tags and decoding the payload into UTF-8 or UTF-16 format. Item is displayed with its nutritional information after it is successfully scanned and the payload decoded is used to query the Firebase database. Dialog Alert message is triggered if user has a health condition and scans an item that is not recommended for their health condition.
 
-## Cart
+#### Cart
 Recycler View to show all items within the shopping cart of the user. Total cost of the items in the shopping cart is calculated and shown.
 
-## ShoppingCartItemModel
+#### ShoppingCartItemModel
 Model for Shopping Cart Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Cart and Checkout class.
 
-## ShoppingCartAdapterClass
+#### ShoppingCartAdapterClass
 Adapter class to manage the views in the Recycler View of Cart class. Items are sorted by alphabetical order and additional functionality such as modification of quantity and removal of item from shopping cart are included in this class.
 
-## Checkout
+#### Checkout
 Confirmation of order, delivery address and delivery timeslots. Once order is checked out, the shopping cart is cleared and the order can be reviewed under the Delivery tab.
 
-## SelectTiming
+#### SelectTiming
 Use of Android Widget DatePicker and TimePicker to select delivery date and time.
 
-## Delivery
+#### Delivery
 List View to show all delivery orders, sorted by chronological order based on delivery dates.
 
-## Order
+#### Order
 Model for Order Item with required attributes (Delivery Date, Delivery Status, Order ID). Orders are sorted by chronological order based on delivery dates.
 
-## OrderAdapter
+#### OrderAdapter
 Adapter class to manage the views in the List View of Delivery clas.
 
-## GroceryList
+#### GroceryList
 Recycler View to show all items within an order.
 
-## Model
+#### Model
 Static Nest Class for Grocery Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Grocery class.
 
-## GroceryAdapter
+#### GroceryAdapter
 Adapter class to manage the views in the Recycler View of GroceryList class.
