@@ -10,6 +10,8 @@ Tao Sihan (1005515)
 Lawrence Chen Qing Zhao (1005012)  
 Constance Chua Jie Ning (1005499)
 
+https://user-images.githubusercontent.com/11241733/165093083-6bc7c7c6-1d57-4631-967f-1d4792dc405b.mp4
+
 ![poster](https://github.com/milselarch/scancart/blob/master/poster.png)
 
 ### Navigating the repo
@@ -29,50 +31,35 @@ User flow state transistion diagram of our app for reference ([] square brackets
 
 ### Description of Java classes in the app
 
-#### MainActivity
+1. MainActivity  
 Firebase Phone SMS Authentication for User Sign-In process.
-
-#### FirebaseHandler
+2. FirebaseHandler  
 Singleton instance of FirebaseFirestore, that is used by all other classes within the app to interact with the Firebase database. Firebase calls (User Registration, Removing items from Shopping Cart, Get Completed Orders etc.) are extracted to the FirebaseHandler to facilitate modularity and readability of code in other classes.
-
-#### UserAccount
+3. UserAccount  
 Singleton instance managing the user ID that allows users to remain signed in using Shared Preference until the user choose to log out.
-
-#### EditProfile
+4. EditProfile  
 Allows user to edit their Name, Phone Number, Street Address, Postal Code, Floor and Unit Number and Health Conditions.
-
-#### Shop
+5. Shop  
 Near Field Communication Scanning of NFC Tags and decoding the payload into UTF-8 or UTF-16 format. Item is displayed with its nutritional information after it is successfully scanned and the payload decoded is used to query the Firebase database. Dialog Alert message is triggered if user has a health condition and scans an item that is not recommended for their health condition.
-
-#### Cart
+6. Cart  
 Recycler View to show all items within the shopping cart of the user. Total cost of the items in the shopping cart is calculated and shown.
-
-#### ShoppingCartItemModel
+7. ShoppingCartItemModel  
 Model for Shopping Cart Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Cart and Checkout class.
-
-#### ShoppingCartAdapterClass
+8. ShoppingCartAdapterClass  
 Adapter class to manage the views in the Recycler View of Cart class. Items are sorted by alphabetical order and additional functionality such as modification of quantity and removal of item from shopping cart are included in this class.
-
-#### Checkout
+9. Checkout  
 Confirmation of order, delivery address and delivery timeslots. Once order is checked out, the shopping cart is cleared and the order can be reviewed under the Delivery tab.
-
-#### SelectTiming
+10. SelectTiming  
 Use of Android Widget DatePicker and TimePicker to select delivery date and time.
-
-#### Delivery
+11. Delivery  
 List View to show all delivery orders, sorted by chronological order based on delivery dates.
-
-#### Order
+12. Order  
 Model for Order Item with required attributes (Delivery Date, Delivery Status, Order ID). Orders are sorted by chronological order based on delivery dates.
-
-#### OrderAdapter
+13. OrderAdapter  
 Adapter class to manage the views in the List View of Delivery clas.
-
-#### GroceryList
+14. GroceryList  
 Recycler View to show all items within an order.
-
-#### Model
+15. Model  
 Static Nest Class for Grocery Item with required attributes (Item Tag ID, name, quantity, cost, Image URL). This is used by the Grocery class.
-
-#### GroceryAdapter
+16. GroceryAdapter  
 Adapter class to manage the views in the Recycler View of GroceryList class.
